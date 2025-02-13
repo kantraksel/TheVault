@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{8dfc9d63-990c-4f6a-87e1-b2dcd13976ad}</ProjectGuid>
+    <RootNamespace>ConsoleApplication1</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>TheVault</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)Binary\$(Configuration)\</OutDir>
+    <IntDir>Intermediate\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)Binary\$(Configuration)\</OutDir>
+    <IntDir>Intermediate\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgUseMD>true</VcpkgUseMD>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgUseMD>true</VcpkgUseMD>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="ConsoleApplication1.cpp" />
+    <ClCompile Include="Crypto.cpp" />
+    <ClCompile Include="GUI\GUIManager.cpp" />
+    <ClCompile Include="GUI\Objects\ErrorApplet.cpp" />
+    <ClCompile Include="GUI\Objects\LockApplet.cpp" />
+    <ClCompile Include="GUI\Objects\LoginApplet.cpp" />
+    <ClCompile Include="GUI\Objects\MainApplet.cpp" />
+    <ClCompile Include="GUI\Objects\MainWindow.cpp" />
+    <ClCompile Include="GUI\Objects\ProcessApplet.cpp" />
+    <ClCompile Include="GUI\Objects\WelcomeApplet.cpp" />
+    <ClCompile Include="PassManager.cpp" />
+    <ClCompile Include="StringUtils.cpp" />
+    <ClCompile Include="Vault.cpp" />
+    <ClCompile Include="VaultKeeper.cpp" />
+    <ClCompile Include="WinApi.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Crypto.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GUI\GUIManager.h" />
+    <ClInclude Include="GUI\IRender.h" />
+    <ClInclude Include="GUI\Objects\ErrorApplet.h" />
+    <ClInclude Include="GUI\Objects\IApplet.h" />
+    <ClInclude Include="GUI\Objects\ImGuiUtils.h" />
+    <ClInclude Include="GUI\Objects\LockApplet.h" />
+    <ClInclude Include="GUI\Objects\LoginApplet.h" />
+    <ClInclude Include="GUI\Objects\MainApplet.h" />
+    <ClInclude Include="GUI\Objects\MainWindow.h" />
+    <ClInclude Include="GUI\Objects\ProcessApplet.h" />
+    <ClInclude Include="GUI\Objects\WelcomeApplet.h" />
+    <ClInclude Include="PassManager.h" />
+    <ClInclude Include="SecureArray.h" />
+    <ClInclude Include="StringUtils.h" />
+    <ClInclude Include="UnsavedState.h" />
+    <ClInclude Include="Vault.h" />
+    <ClInclude Include="VaultKeeper.h" />
+    <ClInclude Include="WinApi.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GhostFries\Core\Core.vcxproj">
+      <Project>{605f4617-3907-46e3-bbc7-29a1f6c76983}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GhostFries\FileFormats\FileFormats.vcxproj">
+      <Project>{3f154d8e-6f34-4f52-a87a-4b93cff9137c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GhostFries\Input\Input.vcxproj">
+      <Project>{d90bc244-f242-4e47-98e6-a18290005db7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GhostFries\PackFS\PackFS.vcxproj">
+      <Project>{9026fbe6-088c-4e01-b55e-e7fed997ed02}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GhostFries\Physics\Physics.vcxproj">
+      <Project>{f1a16bec-acdb-4754-b622-8db11441c296}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GhostFries\Render2D\Render2D.vcxproj">
+      <Project>{2d1e9a33-7cb9-496f-8e07-0511e9e431ba}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GhostFries\Render\Graphics.vcxproj">
+      <Project>{7aeacbd7-813d-41e9-8555-a55045b303c7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GhostFries\SGPK\SGPK.vcxproj">
+      <Project>{ec2cb5f8-7a8d-4af5-982c-0a6e4b411563}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GhostFries\SharedCore\SharedCore.vcxproj">
+      <Project>{4903b93c-41a1-4b88-a8c5-c3afb14f3d01}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GhostFries\SoundSys\Sounds.vcxproj">
+      <Project>{f9fe1d95-ee25-4d8f-a30e-ee4836dfcecf}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{69f57369-75be-4e04-9313-754884482546}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\GUI">
+      <UniqueIdentifier>{7ed5b36d-ca66-49e0-8ea5-485cf63455e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\GUI\Objects">
+      <UniqueIdentifier>{0c126c26-12d7-4849-825d-ef7c7b4cb4ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Utils">
+      <UniqueIdentifier>{e1400cff-f783-435d-b1ef-69feb7d4bce3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\GUI\Objects\Applets">
+      <UniqueIdentifier>{27e93e62-3287-4427-8682-0e94f1ef71f8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Vault.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleApplication1.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\GUIManager.cpp">
+      <Filter>Source\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Objects\MainWindow.cpp">
+      <Filter>Source\GUI\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="VaultKeeper.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="PassManager.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="WinApi.cpp">
+      <Filter>Source\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Crypto.cpp">
+      <Filter>Source\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Objects\WelcomeApplet.cpp">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Objects\LoginApplet.cpp">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Objects\MainApplet.cpp">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Objects\LockApplet.cpp">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Objects\ProcessApplet.cpp">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClCompile>
+    <ClCompile Include="GUI\Objects\ErrorApplet.cpp">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClCompile>
+    <ClCompile Include="StringUtils.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Vault.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\GUIManager.h">
+      <Filter>Source\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\IRender.h">
+      <Filter>Source\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Objects\MainWindow.h">
+      <Filter>Source\GUI\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="VaultKeeper.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="PassManager.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="WinApi.h">
+      <Filter>Source\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SecureArray.h">
+      <Filter>Source\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Crypto.h">
+      <Filter>Source\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="UnsavedState.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Objects\WelcomeApplet.h">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Objects\LoginApplet.h">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Objects\MainApplet.h">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Objects\LockApplet.h">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Objects\ImGuiUtils.h">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Objects\IApplet.h">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Objects\ProcessApplet.h">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\Objects\ErrorApplet.h">
+      <Filter>Source\GUI\Objects\Applets</Filter>
+    </ClInclude>
+    <ClInclude Include="StringUtils.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
