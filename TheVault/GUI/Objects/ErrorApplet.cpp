@@ -17,7 +17,7 @@ ErrorApplet::~ErrorApplet()
 void ErrorApplet::Render()
 {
 	std::lock_guard lock(errorMutex);
-	BeginVisibleChildWindow("##ErrorApplet", ImVec2(0, 0), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
+	BeginVisibleChildWindow("##ErrorApplet", ImVec2(0, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
 
 	Text("App encountered critical error");
 	ImGui::Separator();

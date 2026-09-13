@@ -1,6 +1,6 @@
 #include "StringUtils.h"
 
-char* StringUtils::ToString(int n)
+char* StringUtils::ToStringNoAlloc(int n)
 {
     bool sign = false;
     if (n < 0)

@@ -97,7 +97,7 @@ void MainApplet::OpenDeleteModal(int idx)
 
 void MainApplet::RenderMain()
 {
-	BeginVisibleChildWindow("##MainApplet", ImVec2(617, 200), ImGuiChildFlags_Border, ImGuiWindowFlags_MenuBar);
+	BeginVisibleChildWindow("##MainApplet", ImVec2(617, 200), ImGuiChildFlags_Borders, ImGuiWindowFlags_MenuBar);
 
 	if (ImGui::BeginMenuBar())
 	{
@@ -131,7 +131,7 @@ void MainApplet::RenderMain()
 			ImGui::TableNextRow();
 
 			ImGui::TableNextColumn();
-			Text(StringUtils::ToString(i + 1));
+			Text(StringUtils::ToStringNoAlloc(i + 1));
 
 			ImGui::TableNextColumn();
 			auto name = passMgr.GetName(i);

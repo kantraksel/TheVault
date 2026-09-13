@@ -73,7 +73,7 @@ void LockApplet::Render()
 
 void LockApplet::RenderMain()
 {
-	BeginVisibleChildWindow("##VaultEncryptor", ImVec2(617, 200), ImGuiChildFlags_Border, ImGuiWindowFlags_MenuBar);
+	BeginVisibleChildWindow("##VaultEncryptor", ImVec2(617, 200), ImGuiChildFlags_Borders, ImGuiWindowFlags_MenuBar);
 
 	if (ImGui::BeginMenuBar())
 	{
@@ -130,7 +130,7 @@ void LockApplet::RenderMain()
 			ImGui::TableNextRow();
 
 			ImGui::TableNextColumn();
-			Text(StringUtils::ToString(i + 1));
+			Text(StringUtils::ToStringNoAlloc(i + 1));
 
 			ImGui::TableNextColumn();
 			Text(keeper.GetHint(i));

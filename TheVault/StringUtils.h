@@ -2,5 +2,5 @@
 
 namespace StringUtils
 {
-	char* ToString(int n);
+	char* ToStringNoAlloc(int n);
 }

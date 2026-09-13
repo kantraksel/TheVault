@@ -54,7 +54,7 @@ static void CenterNextWindow()
 	ImGui::SetNextWindowPos(viewport->GetCenter(), 0, ImVec2(0.5f, 0.5f));
 }
 
-static void BeginVisibleChildWindow(const char* id, const ImVec2& size, ImGuiChildFlags flags = ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags wndFlags = 0)
+static void BeginVisibleChildWindow(const char* id, const ImVec2& size, ImGuiChildFlags flags = ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags wndFlags = 0)
 {
 	CenterNextWindow();
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyle().Colors[ImGuiCol_WindowBg]);
