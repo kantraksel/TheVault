@@ -7,7 +7,7 @@
 #include <future>
 #include <list>
 #include <functional>
-#include "SecureArray.h"
+#include "Utils/SecureArray.h"
 
 class VaultKeeper
 {

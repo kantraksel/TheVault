@@ -1,7 +1,7 @@
-#include "ImGuiUtils.h"
+#include "Utils/ImGuiUtils.h"
 #include "LoginApplet.h"
-#include "../../Game.h"
-#include "../../Crypto.h"
+#include "App/Game.h"
+#include "Vault/Crypto.h"
 
 extern Game game;
 

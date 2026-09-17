@@ -3,7 +3,7 @@
 #include "Engine/Logger.h"
 #include "PackFS/FileReader.h"
 #include "PackFS/FileWriter.h"
-#include "Crypto.h"
+#include "Vault/Crypto.h"
 
 enum struct Type
 {

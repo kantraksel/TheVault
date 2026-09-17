@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
-#include "SecureArray.h"
+#include "Utils/SecureArray.h"
 
 class Vault
 {

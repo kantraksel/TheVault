@@ -1,8 +1,8 @@
 #include <chrono>
-#include "ImGuiUtils.h"
+#include "Utils/ImGuiUtils.h"
 #include "MainWindow.h"
 #include "Engine/Logger.h"
-#include "../../Game.h"
+#include "App/Game.h"
 
 extern Game game;
 

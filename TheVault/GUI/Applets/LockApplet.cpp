@@ -1,10 +1,9 @@
 #include <string>
-#include "ImGuiUtils.h"
+#include "Utils/ImGuiUtils.h"
 #include "LockApplet.h"
-#include "../../Game.h"
-#include "../../WinApi.h"
-#include "../../Crypto.h"
-#include "../../StringUtils.h"
+#include "App/Game.h"
+#include "Vault/Crypto.h"
+#include "Utils/StringUtils.h"
 
 extern Game game;
 

@@ -5,7 +5,7 @@
 #include "Engine/Logger.h"
 #undef ZeroMemory
 #undef CopyMemory
-#include "Crypto.h"
+#include "Vault/Crypto.h"
 #include "Game.h"
 #include "Engine/Components/CameraComponent.h"
 

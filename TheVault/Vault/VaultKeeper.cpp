@@ -1,6 +1,6 @@
 #include <optional>
 #include "VaultKeeper.h"
-#include "Game.h"
+#include "App/Game.h"
 #include "Crypto.h"
 #include "Engine/Logger.h"
 #include "Utility/StringUtils.h"

@@ -1,6 +1,6 @@
 #pragma once
 #include <future>
-#include "../../SecureArray.h"
+#include "Utils/SecureArray.h"
 #include "IApplet.h"
 
 class LockApplet : public IApplet

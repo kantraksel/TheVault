@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <future>
-#include "../../SecureArray.h"
+#include "Utils/SecureArray.h"
 #include "IApplet.h"
 
 class LoginApplet : public IApplet

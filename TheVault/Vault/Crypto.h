@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "SecureArray.h"
+#include "Utils/SecureArray.h"
 #include "Utility/FixedArray.h"
 
 namespace Crypto

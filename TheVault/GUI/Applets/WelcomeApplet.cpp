@@ -1,7 +1,7 @@
-#include "ImGuiUtils.h"
+#include "Utils/ImGuiUtils.h"
 #include "WelcomeApplet.h"
-#include "../../Game.h"
-#include "../../WinApi.h"
+#include "App/Game.h"
+#include "Utils/WinApi.h"
 
 extern Game game;
 

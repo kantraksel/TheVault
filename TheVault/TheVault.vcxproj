@@ -70,6 +70,7 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalOptions>/Zc:char8_t- %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -87,6 +88,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -96,43 +98,43 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ConsoleApplication1.cpp" />
-    <ClCompile Include="Crypto.cpp" />
+    <ClCompile Include="App\main.cpp" />
+    <ClCompile Include="App\PassManager.cpp" />
+    <ClCompile Include="GUI\Applets\ErrorApplet.cpp" />
+    <ClCompile Include="GUI\Applets\LockApplet.cpp" />
+    <ClCompile Include="GUI\Applets\LoginApplet.cpp" />
+    <ClCompile Include="GUI\Applets\MainApplet.cpp" />
+    <ClCompile Include="GUI\Applets\ProcessApplet.cpp" />
+    <ClCompile Include="GUI\Applets\WelcomeApplet.cpp" />
     <ClCompile Include="GUI\GUIManager.cpp" />
-    <ClCompile Include="GUI\Objects\ErrorApplet.cpp" />
-    <ClCompile Include="GUI\Objects\LockApplet.cpp" />
-    <ClCompile Include="GUI\Objects\LoginApplet.cpp" />
-    <ClCompile Include="GUI\Objects\MainApplet.cpp" />
-    <ClCompile Include="GUI\Objects\MainWindow.cpp" />
-    <ClCompile Include="GUI\Objects\ProcessApplet.cpp" />
-    <ClCompile Include="GUI\Objects\WelcomeApplet.cpp" />
-    <ClCompile Include="PassManager.cpp" />
-    <ClCompile Include="StringUtils.cpp" />
-    <ClCompile Include="Vault.cpp" />
-    <ClCompile Include="VaultKeeper.cpp" />
-    <ClCompile Include="WinApi.cpp" />
+    <ClCompile Include="GUI\MainWindow.cpp" />
+    <ClCompile Include="Utils\StringUtils.cpp" />
+    <ClCompile Include="Utils\WinApi.cpp" />
+    <ClCompile Include="Vault\Crypto.cpp" />
+    <ClCompile Include="Vault\Vault.cpp" />
+    <ClCompile Include="Vault\VaultKeeper.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Crypto.h" />
-    <ClInclude Include="Game.h" />
+    <ClInclude Include="App\Game.h" />
+    <ClInclude Include="App\PassManager.h" />
+    <ClInclude Include="App\UnsavedState.h" />
+    <ClInclude Include="GUI\Applets\ErrorApplet.h" />
+    <ClInclude Include="GUI\Applets\IApplet.h" />
+    <ClInclude Include="GUI\Applets\LockApplet.h" />
+    <ClInclude Include="GUI\Applets\LoginApplet.h" />
+    <ClInclude Include="GUI\Applets\MainApplet.h" />
+    <ClInclude Include="GUI\Applets\ProcessApplet.h" />
+    <ClInclude Include="GUI\Applets\WelcomeApplet.h" />
     <ClInclude Include="GUI\GUIManager.h" />
     <ClInclude Include="GUI\IRender.h" />
-    <ClInclude Include="GUI\Objects\ErrorApplet.h" />
-    <ClInclude Include="GUI\Objects\IApplet.h" />
-    <ClInclude Include="GUI\Objects\ImGuiUtils.h" />
-    <ClInclude Include="GUI\Objects\LockApplet.h" />
-    <ClInclude Include="GUI\Objects\LoginApplet.h" />
-    <ClInclude Include="GUI\Objects\MainApplet.h" />
-    <ClInclude Include="GUI\Objects\MainWindow.h" />
-    <ClInclude Include="GUI\Objects\ProcessApplet.h" />
-    <ClInclude Include="GUI\Objects\WelcomeApplet.h" />
-    <ClInclude Include="PassManager.h" />
-    <ClInclude Include="SecureArray.h" />
-    <ClInclude Include="StringUtils.h" />
-    <ClInclude Include="UnsavedState.h" />
-    <ClInclude Include="Vault.h" />
-    <ClInclude Include="VaultKeeper.h" />
-    <ClInclude Include="WinApi.h" />
+    <ClInclude Include="GUI\MainWindow.h" />
+    <ClInclude Include="Utils\ImGuiUtils.h" />
+    <ClInclude Include="Utils\SecureArray.h" />
+    <ClInclude Include="Utils\StringUtils.h" />
+    <ClInclude Include="Utils\WinApi.h" />
+    <ClInclude Include="Vault\Crypto.h" />
+    <ClInclude Include="Vault\Vault.h" />
+    <ClInclude Include="Vault\VaultKeeper.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GhostFries\Core\Core.vcxproj">

@@ -1,12 +1,12 @@
 #pragma once
-#include "../IRender.h"
-#include "IApplet.h"
-#include "WelcomeApplet.h"
-#include "LoginApplet.h"
-#include "LockApplet.h"
-#include "MainApplet.h"
-#include "ProcessApplet.h"
-#include "ErrorApplet.h"
+#include "IRender.h"
+#include "Applets/IApplet.h"
+#include "Applets/WelcomeApplet.h"
+#include "Applets/LoginApplet.h"
+#include "Applets/LockApplet.h"
+#include "Applets/MainApplet.h"
+#include "Applets/ProcessApplet.h"
+#include "Applets/ErrorApplet.h"
 
 class MainWindow : public IRender
 {

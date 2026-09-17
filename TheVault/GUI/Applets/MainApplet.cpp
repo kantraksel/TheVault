@@ -1,10 +1,10 @@
 #include <filesystem>
-#include "ImGuiUtils.h"
+#include "Utils/ImGuiUtils.h"
 #include "Utility/StringUtils.h"
 #include "MainApplet.h"
-#include "../../Game.h"
-#include "../../WinApi.h"
-#include "../../StringUtils.h"
+#include "App/Game.h"
+#include "Utils/WinApi.h"
+#include "Utils/StringUtils.h"
 
 extern Game game;
 

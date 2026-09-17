@@ -2,9 +2,9 @@
 #include "Engine/IGame.h"
 #include "Utility/ObjectPointer.h"
 #include "GUI/GUIManager.h"
-#include "GUI/Objects/MainWindow.h"
-#include "Vault.h"
-#include "VaultKeeper.h"
+#include "GUI/MainWindow.h"
+#include "Vault/Vault.h"
+#include "Vault/VaultKeeper.h"
 #include "PassManager.h"
 #include "UnsavedState.h"
 
