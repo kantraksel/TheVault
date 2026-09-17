@@ -24,8 +24,7 @@ struct Task
 VaultKeeper::VaultKeeper()
 {
 	file = L"vault.bin";
-	mHints.reserve(16);
-	mKeyChain.reserve(16);
+	mChain.reserve(16);
 }
 
 VaultKeeper::~VaultKeeper()
@@ -168,23 +167,15 @@ uint64_t VaultKeeper::OpenVaultDeferred(const std::wstring& file)
 	}
 	Logger::Log(L"Opened vault {}", file);
 
-	Logger::Log("Unlocking first hint");
-	auto key = Crypto::CopyMemory(vault.GetFirstKey());
-	if (!key)
-		return RaiseError("Failed to allocate memory", true);
-
-	SecureArray hint;
-	if (!vault.UnlockStep(key, 0, hint))
-	{
-		RaiseError("Failed to unlock first hint");
-		return CloseVaultDeferred();
-	}
-
 	this->file = file;
 	{
-		std::lock_guard lock(hintMutex);
-		mHints.push_back(std::string(hint.str(), hint.size()));
-		mKeyChain.push_back(std::move(key));
+		auto& hint = vault.GetStepName();
+
+		std::lock_guard lock(chainMutex);
+		mChain.push_back(Layer
+			{
+				.hint = std::string(hint.str(), hint.size()),
+			});
 	}
 	Logger::Log("Unlocked first hint");
 	return TaskRet::TR_SwitchToLogin;
@@ -203,7 +194,7 @@ uint64_t VaultKeeper::CreateVaultDeferred(const std::wstring& file)
 
 	this->file = file;
 	Logger::Log(L"Set vault path to {}", file);
-	vault.GenerateNew();
+	vault.Reset();
 
 	Logger::Log("Prepared new vault");
 	game.GetUnsavedState().NotifyChange();
@@ -220,9 +211,8 @@ uint64_t VaultKeeper::CloseVaultDeferred()
 	//if changed, save
 
 	{
-		std::lock_guard lock(hintMutex);
-		mHints.clear();
-		mKeyChain.clear();
+		std::lock_guard lock(chainMutex);
+		mChain.clear();
 	}
 	
 	game.GetVault().Reset();
@@ -236,9 +226,9 @@ uint64_t VaultKeeper::CloseVaultDeferred()
 
 void VaultKeeper::GetLastHint(std::string& str)
 {
-	std::lock_guard lock(hintMutex);
-	if (!mHints.empty())
-		str = mHints.back();
+	std::lock_guard lock(chainMutex);
+	if (!mChain.empty())
+		str = mChain.back().hint;
 }
 
 Future VaultKeeper::SubmitPassword(const SecureArray& password)
@@ -256,83 +246,72 @@ uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 
 	Logger::Log("Creating password key");
 	auto& vault = game.GetVault();
-	auto key = vault.CreateKey(pass);
+	auto salt = Crypto::CopyMemory(vault.GetStepSalt());
+	auto key = vault.CreateKey(pass, salt);
 	if (!key)
 		return RaiseError("Failed to create password key");
 
-	// check last hint (next hint doesn't exist, so we can't decrypt it)
-	if (mKeyChain.size() == vault.GetLockSteps())
-	{
-		Logger::Log("Unlocking block");
-
-		SecureArray master;
-		{
-			std::lock_guard lock(hintMutex);
-			master = vault.CreateMasterKey(mKeyChain, key);
-			if (!master)
-				return RaiseError("Failed to create master key", true);
-		}
-		
-		if (!vault.UnlockBlock(master))
-			return RaiseError("Failed to unlock the block");
-
-		{
-			std::lock_guard lock(hintMutex);
-			// delete predef key - create encryptor+hint pairs
-			mKeyChain.erase(mKeyChain.begin());
-			mKeyChain.push_back(std::move(key));
-		}
-
-		Logger::Log("Deserializing content");
-		auto& passMgr = game.GetPassManager();
-		auto& block = vault.GetBlock();
-		if (!passMgr.Deserialize(std::string_view(block.str(), block.size())))
-			return RaiseError("Failed to deserialize content", true);
-		Logger::Log("Opened vault");
-		
-		vault.ResetCache();
-		game.GetUnsavedState().ClearChange();
-		return TaskRet::TR_SwitchToMainView;
-	}
 	Logger::Log("Unlocking next hint");
 	
-	SecureArray hint;
-	if (!vault.UnlockStep(key, (int)mHints.size(), hint))
+	auto& currentStep = mChain.back();
+	if (!vault.UnlockStep(key))
 		return RaiseError("Failed to unlock next hint");
 
 	{
-		std::lock_guard lock(hintMutex);
-		mHints.push_back(std::string(hint.str(), hint.size()));
-		mKeyChain.push_back(std::move(key));
+		auto& hint = vault.GetStepName();
+
+		std::lock_guard lock(chainMutex);
+		currentStep.key = std::move(key);
+		currentStep.salt = std::move(salt);
+		if (!vault.GetBlock())
+		{
+			mChain.push_back(Layer
+				{
+					.hint = std::string(hint.str(), hint.size()),
+				});
+		}
 	}
 	Logger::Log("Unlocked next hint");
+
+	auto& block = vault.GetBlock();
+	if (block)
+	{
+		Logger::Log("Deserializing content");
+		auto& passMgr = game.GetPassManager();
+		if (!passMgr.Deserialize(std::string_view(block.str(), block.size())))
+			return RaiseError("Failed to deserialize content", true);
+		Logger::Log("Opened vault");
+
+		vault.Reset();
+		game.GetUnsavedState().ClearChange();
+		return TaskRet::TR_SwitchToMainView;
+	}
 	return TaskRet::TR_FetchNextHint;
 }
 
 void VaultKeeper::AddHint(const std::string_view& hint)
 {
-	std::lock_guard lock(hintMutex);
-	mHints.push_back(std::string(hint));
-	mKeyChain.resize(mHints.size());
+	std::lock_guard lock(chainMutex);
+	mChain.push_back(Layer
+		{
+			.hint = std::string(hint),
+		});
 
 	game.GetUnsavedState().NotifyChange();
 }
 
 void VaultKeeper::RemoveHint(int i)
 {
-	if (i >= mHints.size() || i < 0)
+	if (i >= mChain.size() || i < 0)
 		return;
 
-	auto it1 = mHints.begin();
-	auto it2 = mKeyChain.begin();
+	auto it1 = mChain.begin();
 	for (int k = 1; k <= i; ++k)
 	{
 		++it1;
-		++it2;
 	}
 
-	mHints.erase(it1);
-	mKeyChain.erase(it2);
+	mChain.erase(it1);
 
 	game.GetUnsavedState().NotifyChange();
 }
@@ -345,7 +324,7 @@ Future VaultKeeper::SetHintKey(int i, const SecureArray& password)
 
 uint64_t VaultKeeper::SetHintKeyDeferred(int i, const SecureArray& password)
 {
-	if (i >= mKeyChain.size() || i < 0)
+	if (i >= mChain.size() || i < 0)
 		return TaskRet::TR_Failed;
 
 	//this check should be in window
@@ -355,11 +334,13 @@ uint64_t VaultKeeper::SetHintKeyDeferred(int i, const SecureArray& password)
 		return TaskRet::TR_Failed;
 
 	Logger::Log("Creating password key");
-	auto key = game.GetVault().CreateKey(pass);
+	SecureArray salt;
+	auto key = game.GetVault().CreateKey(pass, salt);
 	if (!key)
 		return RaiseError("Failed to create password key");
 
-	mKeyChain[i] = std::move(key);
+	mChain[i].key = std::move(key);
+	mChain[i].salt = std::move(salt);
 	Logger::Log("Added hint key");
 
 	game.GetUnsavedState().NotifyChange();
@@ -379,12 +360,12 @@ Future VaultKeeper::SaveCloseVault()
 uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 {
 	//these checks should be in window
-	if (mHints.empty())
+	if (mChain.empty())
 		return RaiseError("Vault must be encrypted with at least one hint");
 
-	for (auto& key : mKeyChain)
+	for (auto& key : mChain)
 	{
-		if (!key)
+		if (!key.key || !key.salt)
 		{
 			RaiseError("All hint keys must be set");
 			return TaskRet::TR_SwitchToLockSetup;
@@ -396,49 +377,25 @@ uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 	if (content.empty())
 		return RaiseError("Failed to serialize content");
 
-	std::lock_guard lock(hintMutex);
+	std::lock_guard lock(chainMutex);
 	Logger::Log("Placing vault");
 
 	auto& vault = game.GetVault();
 	vault.ResetSteps();
 
-	// move keys - create encryptor+next hint pairs
-	auto key = Crypto::CopyMemory(vault.GetFirstKey());
-	if (!key)
-		return RaiseError("Failed to allocate memory", true);
-	mKeyChain.insert(mKeyChain.begin(), std::move(key));
-
-	for (int i = 0; i < mHints.size(); ++i)
+	for (int i = 0; i < mChain.size(); ++i)
 	{
-		auto& hint = mHints[i];
-		auto shint = SecureArray::Wrap(hint.data(), hint.size(), nullptr);
+		auto& layer = mChain[i];
+		auto hint = SecureArray::Wrap(layer.hint.data(), layer.hint.size(), nullptr);
 
-		if (!vault.AddStep(shint, mKeyChain[i]))
+		if (!vault.AddStep(hint, layer.key, layer.salt))
 		{
-			// move keys - create encryptor+hint pairs
-			mKeyChain.erase(mKeyChain.begin());
-
 			RaiseError("Failed to lock hint");
 			return TaskRet::TR_SwitchToLockSetup;
 		}
 	}
 
-	key = vault.CreateMasterKey(mKeyChain, {});
-	// move keys - create encryptor+hint pairs
-	mKeyChain.erase(mKeyChain.begin());
-
-	if (!key)
-	{
-		RaiseError("Failed to create master key");
-		return TaskRet::TR_SwitchToLockSetup;
-	}
-
-	if (!vault.LockBlock(key, content))
-	{
-		RaiseError("Failed to lock block");
-		return TaskRet::TR_SwitchToLockSetup;
-	}
-
+	vault.GetBlock() = SecureArray::Wrap(content.data(), content.size(), nullptr);
 	if (!vault.Place(file))
 	{
 		RaiseError(std::format("Failed to place vault in {}", StringUtils::WideStringToUtf8(file)));
@@ -447,7 +404,7 @@ uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 
 	Logger::Log(L"Placed vault at {}", file);
 
-	vault.ResetCache();
+	vault.Reset();
 	game.GetUnsavedState().ClearChange();
 	if (close)
 		return TaskRet::TR_CloseVault;
@@ -456,23 +413,23 @@ uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 
 int VaultKeeper::GetHintCount()
 {
-	return (int)mHints.size();
+	return static_cast<int>(mChain.size());
 }
 
 std::string_view VaultKeeper::GetHint(int i)
 {
-	if (i >= mHints.size() || i < 0)
+	if (i >= mChain.size() || i < 0)
 		return {};
 	
-	return mHints[i];
+	return mChain[i].hint;
 }
 
 bool VaultKeeper::IsKeyAssigned(int i)
 {
-	if (i >= mKeyChain.size() || i < 0)
+	if (i >= mChain.size() || i < 0)
 		return false;
 
-	return mKeyChain[i];
+	return mChain[i].key;
 }
 
 uint64_t VaultKeeper::RaiseError(const std::string_view& msg, bool critical)
@@ -484,31 +441,19 @@ uint64_t VaultKeeper::RaiseError(const std::string_view& msg, bool critical)
 
 void VaultKeeper::LockDirectApi()
 {
-	hintMutex.lock();
+	chainMutex.lock();
 }
 
 void VaultKeeper::UnlockDirectApi()
 {
-	hintMutex.unlock();
+	chainMutex.unlock();
 }
 
 void VaultKeeper::ChangeHint(int i, const std::string_view& hint)
 {
-	if (i >= mHints.size() || i < 0)
+	if (i >= mChain.size() || i < 0)
 		return;
 
-	mHints[i] = hint;
-	game.GetUnsavedState().NotifyChange();
-}
-
-void VaultKeeper::ResetSalts()
-{
-	game.GetVault().GenerateNew();
-	
-	for (auto& key : mKeyChain)
-	{
-		key.reset();
-	}
-
+	mChain[i].hint = hint;
 	game.GetUnsavedState().NotifyChange();
 }

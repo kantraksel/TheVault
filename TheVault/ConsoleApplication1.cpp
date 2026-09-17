@@ -39,7 +39,7 @@ bool Game::OnInitialize()
 	actor->AddComponent<CameraComponent>();
 	gui = actor->AddComponent<GUIManager>();
 
-	if (!gui->Initialize() || !vault.Initialize())
+	if (!gui->Initialize())
 		return false;
 
 	gui->RegisterObject(&mainWnd);

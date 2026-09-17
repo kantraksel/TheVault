@@ -9,7 +9,6 @@ private:
 	bool openSetHintValueModal : 1;
 	bool openChangeHintModal : 1;
 	bool openDeleteModal : 1;
-	bool openResetSalts : 1;
 	int modalIdx;
 
 	std::string nameInput;
@@ -19,13 +18,11 @@ private:
 	void OpenSetHintValueModal(int idx);
 	void OpenChangeHintModal(int idx);
 	void OpenDeleteModal(int idx);
-	void OpenResetSaltsModal();
 	
 	void RenderMain();
 	void RenderSetHintValueModal();
 	void RenderChangeHintModal();
 	void RenderDeleteModal();
-	void RenderResetSaltsModal();
 
 public:
 	LockApplet();

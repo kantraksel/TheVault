@@ -6,6 +6,7 @@ const size_t Crypto::PwMaxSize = crypto_pwhash_BYTES_MAX;
 const size_t Crypto::PwSaltSize = crypto_pwhash_SALTBYTES;
 const size_t Crypto::ChestKeySize = crypto_secretbox_KEYBYTES;
 const size_t Crypto::ChestNonceSize = crypto_secretbox_NONCEBYTES;
+const size_t Crypto::ChestExtraSize = crypto_secretbox_MACBYTES;
 
 bool Crypto::Init()
 {

@@ -13,7 +13,6 @@ LockApplet::LockApplet()
 	openSetHintValueModal = false;
 	openChangeHintModal = false;
 	openDeleteModal = false;
-	openResetSalts = false;
 	modalIdx = 0;
 
 	nameInput.reserve(256);
@@ -57,18 +56,12 @@ void LockApplet::OpenDeleteModal(int idx)
 	openDeleteModal = true;
 }
 
-void LockApplet::OpenResetSaltsModal()
-{
-	openResetSalts = true;
-}
-
 void LockApplet::Render()
 {
 	RenderMain();
 	RenderSetHintValueModal();
 	RenderChangeHintModal();
 	RenderDeleteModal();
-	RenderResetSaltsModal();
 }
 
 void LockApplet::RenderMain()
@@ -90,10 +83,6 @@ void LockApplet::RenderMain()
 		}
 		ImGui::EndMenuBar();
 	}
-
-	if (ImGui::Button("Reset public tokens"))
-		OpenResetSaltsModal();
-	ImGui::Separator();
 
 	Text("Vault Locks");
 	ImGui::Separator();
@@ -278,31 +267,6 @@ void LockApplet::RenderDeleteModal()
 			ImGui::CloseCurrentPopup();
 
 		keeper.UnlockDirectApi();
-		ImGui::EndPopup();
-	}
-}
-
-void LockApplet::RenderResetSaltsModal()
-{
-	if (openResetSalts)
-	{
-		openResetSalts = false;
-		ImGui::OpenPopup("Reset Public Tokens");
-	}
-
-	if (ImGui::BeginPopupModal("Reset Public Tokens", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		Text("Resetting public token requires setting hint values again.");
-
-		if (ImGui::Button("Reset"))
-		{
-			game.GetKeeper().ResetSalts();
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel"))
-			ImGui::CloseCurrentPopup();
-
 		ImGui::EndPopup();
 	}
 }

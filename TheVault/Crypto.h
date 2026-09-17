@@ -10,6 +10,7 @@ namespace Crypto
 	extern const size_t PwSaltSize;
 	extern const size_t ChestKeySize;
 	extern const size_t ChestNonceSize;
+	extern const size_t ChestExtraSize;
 
 	bool Init();
 	SecureArray AllocMemory(size_t size);

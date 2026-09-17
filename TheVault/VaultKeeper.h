@@ -15,9 +15,15 @@ public:
 	typedef std::future<uint64_t> Future;
 
 private:
-	std::vector<std::string> mHints; //protected by hintMutex
-	std::vector<SecureArray> mKeyChain; //protected by hintMutex
-	std::mutex hintMutex;
+	struct Layer
+	{
+		SecureArray key;
+		SecureArray salt;
+		std::string hint;
+	};
+
+	std::vector<Layer> mChain; //protected by chainMutex
+	std::mutex chainMutex;
 	std::wstring file; //used only in the thread
 
 	std::jthread thread;
@@ -53,7 +59,6 @@ public:
 
 	void GetLastHint(std::string& str);
 	Future SubmitPassword(const SecureArray& password);
-	void ResetSalts();
 
 	// direct api for LockSetup
 	void LockDirectApi();

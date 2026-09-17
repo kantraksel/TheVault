@@ -6,36 +6,45 @@
 class Vault
 {
 private:
+	SecureArray mBuffer;
 	SecureArray mData;
 
-	SecureArray mKeySalt;
-	SecureArray mLockNonce;
-	SecureArray mFirstKey;
+	enum class BlockType
+	{
+		Challenge,
+		Data,
+	};
 
-	std::vector<SecureArray> mLockSteps;
-	SecureArray mEBlock;
+	struct LockStep
+	{
+		SecureArray key;
+		SecureArray salt;
+		SecureArray nonce;
+		SecureArray data;
+		SecureArray name;
+		BlockType type;
+	};
+	std::vector<LockStep> mLockSteps;
+	SecureArray mBlock;
+
+	bool ReadLockStep();
 
 public:
 	Vault();
 	~Vault();
 
-	bool Initialize();
 	void Reset();
-	void ResetCache();
 	bool Open(const std::wstring_view& file);
 	bool Place(const std::wstring_view& file);
 
 	size_t GetLockSteps() { return mLockSteps.size(); }
-	SecureArray& GetBlock() { return mEBlock; }
-	SecureArray& GetFirstKey() { return mFirstKey; }
+	SecureArray& GetBlock() { return mBlock; }
+	SecureArray& GetStepSalt() { return mLockSteps.back().salt; }
+	SecureArray& GetStepName() { return mLockSteps.back().name; }
 
-	SecureArray CreateKey(const std::string_view& password);
-	SecureArray CreateMasterKey(const std::vector<SecureArray>& keys, const SecureArray& lastKey);
-	bool UnlockStep(const SecureArray& key, int i, SecureArray& plain);
-	bool UnlockBlock(const SecureArray& key);
+	SecureArray CreateKey(const std::string_view& password, SecureArray& salt);
+	bool UnlockStep(const SecureArray& key);
 
-	void GenerateNew();
 	void ResetSteps();
-	bool AddStep(const SecureArray& plain, const SecureArray& key);
-	bool LockBlock(const SecureArray& key, const std::string_view& content);
+	bool AddStep(const SecureArray& name, const SecureArray& key, const SecureArray& salt);
 };
