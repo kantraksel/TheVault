@@ -1,5 +1,8 @@
 #include "StringUtils.h"
 
+static char buff[16];
+constexpr int max = sizeof(buff) - 1;
+
 char* StringUtils::ToStringNoAlloc(int n)
 {
     bool sign = false;
@@ -8,9 +11,6 @@ char* StringUtils::ToStringNoAlloc(int n)
         sign = true;
         n = 0 - n;
     }
-
-    static char buff[12];
-    constexpr int max = sizeof(buff) - 1;
 
     char* ptr = buff + max;
     *ptr = 0;

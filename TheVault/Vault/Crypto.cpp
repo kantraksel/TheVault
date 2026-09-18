@@ -70,22 +70,6 @@ SecureArray Crypto::HashPassword(const std::string_view& password, const SecureA
 	return hash;
 }
 
-SecureArray Crypto::HashData(const std::string_view& data)
-{
-	if (data.empty())
-		return nullptr;
-
-	auto hash = AllocMemory(crypto_generichash_BYTES);
-	if (!hash)
-		return nullptr;
-
-	int result = crypto_generichash(hash, hash.size(), (unsigned char*)data.data(), data.size(), nullptr, 0);
-	if (result < 0)
-		return nullptr;
-
-	return hash;
-}
-
 SecureArray Crypto::CreateChest(const std::string_view& content, const SecureArray& key, const SecureArray& nonce)
 {
 	if (content.empty() || key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES)
@@ -100,22 +84,6 @@ SecureArray Crypto::CreateChest(const std::string_view& content, const SecureArr
 		return nullptr;
 
 	return chest;
-}
-
-SecureArray Crypto::OpenChest(const SecureArray& chest, const SecureArray& key, const SecureArray& nonce)
-{
-	if (!chest || key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES || chest.size() <= crypto_secretbox_MACBYTES)
-		return nullptr;
-
-	auto content = AllocMemory(chest.size() - crypto_secretbox_MACBYTES);
-	if (!content)
-		return nullptr;
-
-	int result = crypto_secretbox_open_easy(content, chest, chest.size(), nonce, key);
-	if (result < 0)
-		return nullptr;
-
-	return content;
 }
 
 bool Crypto::OpenChestInPlace(SecureArray& chest, const SecureArray& key, const SecureArray& nonce)

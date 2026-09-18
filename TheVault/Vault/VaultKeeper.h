@@ -22,20 +22,19 @@ private:
 		std::string hint;
 	};
 
-	std::vector<Layer> mChain; //protected by chainMutex
+	std::vector<Layer> mChain;
 	std::mutex chainMutex;
 	std::wstring file; //used only in the thread
 
 	std::jthread thread;
 	std::condition_variable threadCvar;
 	std::mutex taskMutex;
-	std::list<struct Task> tasks; //protected by taskMutex
+	std::list<struct Task> tasks;
 
 	void Run(std::stop_token token);
 	Future SendCmd(const std::function<uint64_t()>& f);
 	Future SendCmd(const std::function<uint64_t(const SecureArray&)>& f, const SecureArray& arg);
 	Future SendCmd(const std::function<uint64_t(const std::wstring&)>& f, const std::wstring_view& arg);
-	Future SendCmd(const std::function<uint64_t(const std::string&)>& f, const std::string_view& arg);
 
 	uint64_t OpenVaultDeferred(const std::wstring& file);
 	uint64_t CreateVaultDeferred(const std::wstring& file);
@@ -60,12 +59,17 @@ public:
 	void GetLastHint(std::string& str);
 	Future SubmitPassword(const SecureArray& password);
 
-	// direct api for LockSetup
-	void LockDirectApi();
-	void UnlockDirectApi();
-	int GetHintCount();
-	std::string_view GetHint(int i);
-	bool IsKeyAssigned(int i);
+	struct DirectApi
+	{
+		VaultKeeper& keeper;
+		std::unique_lock<std::mutex> lock;
+
+		int GetHintCount();
+		std::string_view GetHint(int i);
+		bool IsKeyAssigned(int i);
+	};
+	DirectApi GetDirectApi();
+	
 	void AddHint(const std::string_view& hint);
 	void RemoveHint(int i);
 	Future SetHintKey(int i, const SecureArray& password);

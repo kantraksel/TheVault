@@ -12,13 +12,7 @@ using TaskRet = MainWindow::TaskRet;
 struct Task
 {
 	std::function<uint64_t()> func;
-	std::function<uint64_t(const SecureArray&)> func2;
-	std::function<uint64_t(const std::wstring&)> func3;
-	std::function<uint64_t(const std::string&)> func4;
 	std::promise<uint64_t> promise;
-	SecureArray arg;
-	std::optional<std::wstring> arg2;
-	std::optional<std::string> arg3;
 };
 
 VaultKeeper::VaultKeeper()
@@ -73,15 +67,7 @@ void VaultKeeper::Run(std::stop_token token)
 		auto& task = tasks.front();
 
 		lock.unlock();
-		uint64_t value = 0;
-		if (task.func)
-			value = task.func();
-		else if (task.func2)
-			value = task.func2(task.arg);
-		else if (task.func3)
-			value = task.func3(*task.arg2);
-		else if (task.func4)
-			value = task.func4(*task.arg3);
+		uint64_t value = task.func();
 		lock.lock();
 
 		task.promise.set_value(value);
@@ -89,9 +75,17 @@ void VaultKeeper::Run(std::stop_token token)
 	}
 }
 
-Future VaultKeeper::SendCmd(const std::function<uint64_t()>& f)
+Future VaultKeeper::SendCmd(const std::function<uint64_t()>& func)
 {
-	Task task{ f };
+	Task task
+	{
+		.func = [&]() -> uint64_t
+		{
+			if (func)
+				return func();
+			return 0;
+		},
+	};
 	auto future = task.promise.get_future();
 
 	{
@@ -102,15 +96,21 @@ Future VaultKeeper::SendCmd(const std::function<uint64_t()>& f)
 	return future;
 }
 
-Future VaultKeeper::SendCmd(const std::function<uint64_t(const SecureArray&)>& f, const SecureArray& arg)
+Future VaultKeeper::SendCmd(const std::function<uint64_t(const SecureArray&)>& func, const SecureArray& arg)
 {
-	auto mem = Crypto::CopyMemory(arg);
-	if (!mem)
+	std::shared_ptr<SecureArray> mem = std::make_shared<SecureArray>(Crypto::CopyMemory(arg));
+	if (!mem || !*mem)
 		return {};
 
-	Task task;
-	task.arg = std::move(mem);
-	task.func2 = f;
+	Task task
+	{
+		.func = [=]() -> uint64_t
+		{
+			if (func)
+				return func(*mem.get());
+			return 0;
+		},
+	};
 	auto future = task.promise.get_future();
 
 	{
@@ -121,26 +121,18 @@ Future VaultKeeper::SendCmd(const std::function<uint64_t(const SecureArray&)>& f
 	return future;
 }
 
-Future VaultKeeper::SendCmd(const std::function<uint64_t(const std::wstring&)>& f, const std::wstring_view& arg)
+Future VaultKeeper::SendCmd(const std::function<uint64_t(const std::wstring&)>& func, const std::wstring_view& arg)
 {
-	Task task;
-	task.arg2 = arg;
-	task.func3 = f;
-	auto future = task.promise.get_future();
-
+	auto argCopy = std::wstring(arg);
+	Task task
 	{
-		std::lock_guard lock(taskMutex);
-		tasks.push_back(std::move(task));
-	}
-	threadCvar.notify_one();
-	return future;
-}
-
-Future VaultKeeper::SendCmd(const std::function<uint64_t(const std::string&)>& f, const std::string_view& arg)
-{
-	Task task;
-	task.arg3 = arg;
-	task.func4 = f;
+		.func = [=]() -> uint64_t
+		{
+			if (func)
+				return func(argCopy);
+			return 0;
+		},
+	};
 	auto future = task.promise.get_future();
 
 	{
@@ -253,7 +245,6 @@ uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 
 	Logger::Log("Unlocking next hint");
 	
-	auto& currentStep = mChain.back();
 	if (!vault.UnlockStep(key))
 		return RaiseError("Failed to unlock next hint");
 
@@ -261,6 +252,7 @@ uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 		auto& hint = vault.GetStepName();
 
 		std::lock_guard lock(chainMutex);
+		auto& currentStep = mChain.back();
 		currentStep.key = std::move(key);
 		currentStep.salt = std::move(salt);
 		if (!vault.GetBlock())
@@ -302,6 +294,7 @@ void VaultKeeper::AddHint(const std::string_view& hint)
 
 void VaultKeeper::RemoveHint(int i)
 {
+	std::lock_guard lock(chainMutex);
 	if (i >= mChain.size() || i < 0)
 		return;
 
@@ -324,6 +317,7 @@ Future VaultKeeper::SetHintKey(int i, const SecureArray& password)
 
 uint64_t VaultKeeper::SetHintKeyDeferred(int i, const SecureArray& password)
 {
+	std::lock_guard lock(chainMutex);
 	if (i >= mChain.size() || i < 0)
 		return TaskRet::TR_Failed;
 
@@ -360,6 +354,7 @@ Future VaultKeeper::SaveCloseVault()
 uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 {
 	//these checks should be in window
+	std::lock_guard lock(chainMutex);
 	if (mChain.empty())
 		return RaiseError("Vault must be encrypted with at least one hint");
 
@@ -377,7 +372,6 @@ uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 	if (content.empty())
 		return RaiseError("Failed to serialize content");
 
-	std::lock_guard lock(chainMutex);
 	Logger::Log("Placing vault");
 
 	auto& vault = game.GetVault();
@@ -411,25 +405,25 @@ uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 	return TaskRet::TR_SwitchToMainView;
 }
 
-int VaultKeeper::GetHintCount()
+int VaultKeeper::DirectApi::GetHintCount()
 {
-	return static_cast<int>(mChain.size());
+	return static_cast<int>(keeper.mChain.size());
 }
 
-std::string_view VaultKeeper::GetHint(int i)
+std::string_view VaultKeeper::DirectApi::GetHint(int i)
 {
-	if (i >= mChain.size() || i < 0)
+	if (i >= keeper.mChain.size() || i < 0)
 		return {};
 	
-	return mChain[i].hint;
+	return keeper.mChain[i].hint;
 }
 
-bool VaultKeeper::IsKeyAssigned(int i)
+bool VaultKeeper::DirectApi::IsKeyAssigned(int i)
 {
-	if (i >= mChain.size() || i < 0)
+	if (i >= keeper.mChain.size() || i < 0)
 		return false;
 
-	return mChain[i].key;
+	return keeper.mChain[i].key;
 }
 
 uint64_t VaultKeeper::RaiseError(const std::string_view& msg, bool critical)
@@ -439,18 +433,14 @@ uint64_t VaultKeeper::RaiseError(const std::string_view& msg, bool critical)
 	return critical ? TaskRet::TR_CriticalError : TaskRet::TR_Failed;
 }
 
-void VaultKeeper::LockDirectApi()
+VaultKeeper::DirectApi VaultKeeper::GetDirectApi()
 {
-	chainMutex.lock();
-}
-
-void VaultKeeper::UnlockDirectApi()
-{
-	chainMutex.unlock();
+	return { .keeper = *this, .lock = std::unique_lock{ chainMutex } };
 }
 
 void VaultKeeper::ChangeHint(int i, const std::string_view& hint)
 {
+	std::lock_guard lock(chainMutex);
 	if (i >= mChain.size() || i < 0)
 		return;
 

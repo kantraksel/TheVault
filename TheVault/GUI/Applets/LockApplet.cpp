@@ -108,8 +108,7 @@ void LockApplet::RenderMain()
 		ImGui::TableSetupColumn("");
 		ImGui::TableHeadersRow();
 
-		auto& keeper = game.GetKeeper();
-		keeper.LockDirectApi();
+		auto keeper = game.GetKeeper().GetDirectApi();
 
 		int hintCount = keeper.GetHintCount();
 		for (int i = 0; i < hintCount; ++i)
@@ -140,7 +139,6 @@ void LockApplet::RenderMain()
 
 			ImGui::PopID();
 		}
-		keeper.UnlockDirectApi();
 
 		if (hintCount == 0)
 		{
@@ -172,9 +170,10 @@ void LockApplet::RenderSetHintValueModal()
 	{
 		auto& keeper = game.GetKeeper();
 
-		keeper.LockDirectApi();
-		Text(keeper.GetHint(modalIdx));
-		keeper.UnlockDirectApi();
+		{
+			auto api = keeper.GetDirectApi();
+			Text(api.GetHint(modalIdx));
+		}
 
 		if (!vaultTask.valid())
 		{
@@ -213,7 +212,7 @@ void LockApplet::RenderChangeHintModal()
 		openChangeHintModal = false;
 		ImGui::OpenPopup("Change hint");
 
-		nameInput = game.GetKeeper().GetHint(modalIdx);
+		nameInput = game.GetKeeper().GetDirectApi().GetHint(modalIdx);
 	}
 
 	if (ImGui::BeginPopupModal("Change hint", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
@@ -253,9 +252,12 @@ void LockApplet::RenderDeleteModal()
 		ImGui::SameLine();
 
 		auto& keeper = game.GetKeeper();
-		keeper.LockDirectApi();
 
-		Text(keeper.GetHint(modalIdx));
+		{
+			auto api = keeper.GetDirectApi();
+			Text(api.GetHint(modalIdx));
+		}
+		
 		if (ImGui::Button("Yes"))
 		{
 			keeper.RemoveHint(modalIdx);
@@ -265,7 +267,6 @@ void LockApplet::RenderDeleteModal()
 		if (ImGui::Button("No"))
 			ImGui::CloseCurrentPopup();
 
-		keeper.UnlockDirectApi();
 		ImGui::EndPopup();
 	}
 }
