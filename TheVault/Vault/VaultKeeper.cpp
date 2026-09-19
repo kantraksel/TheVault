@@ -166,7 +166,7 @@ uint64_t VaultKeeper::OpenVaultDeferred(const std::wstring& file)
 		std::lock_guard lock(chainMutex);
 		mChain.push_back(Layer
 			{
-				.hint = std::string(hint.str(), hint.size()),
+				.hint = std::string(reinterpret_cast<char*>(hint.data()), hint.size()),
 			});
 	}
 	Logger::Log("Unlocked first hint");
@@ -231,8 +231,8 @@ Future VaultKeeper::SubmitPassword(const SecureArray& password)
 
 uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 {
-	auto size = strnlen_s(password.str(), password.size());
-	auto pass = std::string_view(password.str(), size);
+	auto size = strnlen_s(reinterpret_cast<const char*>(password.data()), password.size());
+	auto pass = std::string_view(reinterpret_cast<const char*>(password.data()), size);
 	if (pass.empty())
 		return TaskRet::TR_Failed;
 
@@ -259,7 +259,7 @@ uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 		{
 			mChain.push_back(Layer
 				{
-					.hint = std::string(hint.str(), hint.size()),
+					.hint = std::string(reinterpret_cast<const char*>(hint.data()), hint.size()),
 				});
 		}
 	}
@@ -270,7 +270,7 @@ uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 	{
 		Logger::Log("Deserializing content");
 		auto& passMgr = game.GetPassManager();
-		if (!passMgr.Deserialize(std::string_view(block.str(), block.size())))
+		if (!passMgr.Deserialize(std::string_view(reinterpret_cast<const char*>(block.data()), block.size())))
 			return RaiseError("Failed to deserialize content", true);
 		Logger::Log("Opened vault");
 
@@ -322,8 +322,8 @@ uint64_t VaultKeeper::SetHintKeyDeferred(int i, const SecureArray& password)
 		return TaskRet::TR_Failed;
 
 	//this check should be in window
-	auto size = strnlen_s(password.str(), password.size());
-	auto pass = std::string_view(password.str(), size);
+	auto size = strnlen_s(reinterpret_cast<const char*>(password.data()), password.size());
+	auto pass = std::string_view(reinterpret_cast<const char*>(password.data()), size);
 	if (pass.empty())
 		return TaskRet::TR_Failed;
 
@@ -380,7 +380,7 @@ uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 	for (int i = 0; i < mChain.size(); ++i)
 	{
 		auto& layer = mChain[i];
-		auto hint = SecureArray::Wrap(layer.hint.data(), layer.hint.size(), nullptr);
+		auto hint = SecureArray::CreateRef(layer.hint.data(), layer.hint.size());
 
 		if (!vault.AddStep(hint, layer.key, layer.salt))
 		{
@@ -389,7 +389,7 @@ uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 		}
 	}
 
-	vault.GetBlock() = SecureArray::Wrap(content.data(), content.size(), nullptr);
+	vault.GetBlock() = SecureArray::CreateRef(content.data(), content.size());
 	if (!vault.Place(file))
 	{
 		RaiseError(std::format("Failed to place vault in {}", StringUtils::WideStringToUtf8(file)));
@@ -423,7 +423,7 @@ bool VaultKeeper::DirectApi::IsKeyAssigned(int i)
 	if (i >= keeper.mChain.size() || i < 0)
 		return false;
 
-	return keeper.mChain[i].key;
+	return (bool)keeper.mChain[i].key;
 }
 
 uint64_t VaultKeeper::RaiseError(const std::string_view& msg, bool critical)

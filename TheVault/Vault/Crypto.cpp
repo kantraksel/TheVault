@@ -20,30 +20,36 @@ static void FreeMemory(void* ptr)
 
 SecureArray Crypto::AllocMemory(size_t size)
 {
-	char* mem = (char*)sodium_malloc(size);
-	if (!mem)
+	try
+	{
+		return SecureArray(size);
+	}
+	catch (...)
+	{
 		return nullptr;
-	return SecureArray::Wrap(mem, size, FreeMemory);
+	}
 }
 
 void Crypto::ZeroMemory(SecureArray& memory)
 {
-	sodium_memzero(memory, memory.size());
+	sodium_memzero(memory.data(), memory.size());
 }
 
 void Crypto::FillRandomBytes(SecureArray& memory)
 {
-	randombytes_buf(memory, memory.size());
+	randombytes_buf(memory.data(), memory.size());
 }
 
 SecureArray Crypto::CopyMemory(const SecureArray& memory)
 {
-	auto size = memory.size();
-	char* mem = (char*)sodium_malloc(size);
-	if (!mem)
+	try
+	{
+		return SecureArray::Copy(memory);
+	}
+	catch (...)
+	{
 		return nullptr;
-	memcpy(mem, memory, size);
-	return SecureArray::Wrap(mem, size, FreeMemory);
+	}
 }
 
 SecureArray Crypto::HashPassword(const std::string_view& password, const SecureArray& salt)
@@ -63,7 +69,7 @@ SecureArray Crypto::HashPassword(const std::string_view& password, const SecureA
 	constexpr size_t MemLimit = crypto_pwhash_MEMLIMIT_SENSITIVE;
 #endif
 
-	int result = crypto_pwhash(hash, hash.size(), password.data(), password.size(), salt, OpsLimit, MemLimit, crypto_pwhash_ALG_DEFAULT);
+	int result = crypto_pwhash(hash.data(), hash.size(), password.data(), password.size(), salt.data(), OpsLimit, MemLimit, crypto_pwhash_ALG_DEFAULT);
 	if (result < 0)
 		return nullptr;
 
@@ -79,7 +85,7 @@ SecureArray Crypto::CreateChest(const std::string_view& content, const SecureArr
 	if (!chest)
 		return nullptr;
 
-	int result = crypto_secretbox_easy(chest, (unsigned char*)content.data(), content.size(), nonce, key);
+	int result = crypto_secretbox_easy(chest.data(), (unsigned char*)content.data(), content.size(), nonce.data(), key.data());
 	if (result < 0)
 		return nullptr;
 
@@ -91,7 +97,7 @@ bool Crypto::OpenChestInPlace(SecureArray& chest, const SecureArray& key, const 
 	if (!chest || key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES || chest.size() <= crypto_secretbox_MACBYTES)
 		return false;
 
-	int result = crypto_secretbox_open_easy(chest, chest, chest.size(), nonce, key);
+	int result = crypto_secretbox_open_easy(chest.data(), chest.data(), chest.size(), nonce.data(), key.data());
 	if (result < 0)
 		return false;
 

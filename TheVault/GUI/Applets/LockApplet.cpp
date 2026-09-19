@@ -178,7 +178,7 @@ void LockApplet::RenderSetHintValueModal()
 		if (!vaultTask.valid())
 		{
 			constexpr auto flags = ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
-			bool submit = ImGui::InputText("##Password", passwordInput.str(), passwordInput.size(), flags);
+			bool submit = ImGui::InputText("##Password", reinterpret_cast<char*>(passwordInput.data()), passwordInput.size(), flags);
 			bool submit2 = ImGui::Button("Submit");
 
 			ImGui::SameLine();

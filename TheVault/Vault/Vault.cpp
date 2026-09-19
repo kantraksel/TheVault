@@ -41,11 +41,11 @@ bool Vault::Open(const std::wstring_view& file)
 	if (!data)
 		return false;
 
-	auto ref = FixedArray<unsigned char>::CreateArrayRef(data, data.size());
-	if (!stream.Read(ref))
+	if (stream.Read(data.data(), static_cast<uint32_t>(data.size())) != data.size())
 		return false;
+
 	mBuffer = std::move(data);
-	mData = SecureArray::Wrap(mBuffer.str(), mBuffer.size(), nullptr);
+	mData = mBuffer.getRef();
 
 	if (!ReadLockStep() || !UnlockStep(mLockSteps.front().name))
 		return false;
@@ -54,7 +54,7 @@ bool Vault::Open(const std::wstring_view& file)
 
 bool Vault::ReadLockStep()
 {
-	MemoryStream memory(mData, mData.size());
+	MemoryStream memory(mData.data(), mData.size());
 
 	BlockType type;
 	if (!memory.Read(type))
@@ -62,23 +62,23 @@ bool Vault::ReadLockStep()
 
 	if (memory.GetReadableSize() < Crypto::PwSaltSize + Crypto::ChestNonceSize)
 		return false;
-	auto salt = SecureArray::Wrap(memory.GetCurrentData(), Crypto::PwSaltSize, nullptr);
+	auto salt = SecureArray::CreateRef(memory.GetCurrentData(), Crypto::PwSaltSize);
 	memory.Seek(salt.size());
-	auto nonce = SecureArray::Wrap(memory.GetCurrentData(), Crypto::ChestNonceSize, nullptr);
+	auto nonce = SecureArray::CreateRef(memory.GetCurrentData(), Crypto::ChestNonceSize);
 	memory.Seek(nonce.size());
 	
 	unsigned int size;
 	if (!memory.Read(size) || memory.GetReadableSize() < size)
 		return false;
-	auto data = SecureArray::Wrap(memory.GetCurrentData(), size, nullptr);
+	auto data = SecureArray::CreateRef(memory.GetCurrentData(), size);
 	memory.Seek(size);
 
 	if (!memory.Read(size) || memory.GetReadableSize() < size)
 		return false;
-	auto name = SecureArray::Wrap(memory.GetCurrentData(), size, nullptr);
+	auto name = SecureArray::CreateRef(memory.GetCurrentData(), size);
 
 	if (type == BlockType::Data)
-		mData = SecureArray::Wrap(data, data.size(), nullptr);
+		mData = data.getRef();
 	mLockSteps.push_back(LockStep
 		{
 			.salt = std::move(salt),
@@ -100,55 +100,55 @@ bool Vault::Place(const std::wstring_view& file)
 	if (!Container::BeginWrite<VaultHeader>(stream, header))
 		return false;
 
-	auto block = SecureArray::Wrap(mBlock, mBlock.size(), nullptr);
+	auto block = mBlock.getRef();
 	auto blockType = BlockType::Data;
 	for (auto i = mLockSteps.rbegin(); i != mLockSteps.rend(); ++i)
 	{
 		auto& step = *i;
 
 		if (step.nonce.size() != Crypto::ChestNonceSize)
-			step.nonce = Crypto::AllocMemory(Crypto::ChestNonceSize);
+			step.nonce = SecureArray(Crypto::ChestNonceSize);
 		Crypto::FillRandomBytes(step.nonce);
 
-		auto content = std::string_view(block.str(), block.size());
+		auto content = std::string_view(reinterpret_cast<char*>(block.data()), block.size());
 		step.data = Crypto::CreateChest(content, step.key, step.nonce);
 		if (!step.data)
 			return false;
 
 		size_t dataSize = sizeof(BlockType) + sizeof(unsigned int) + step.data.size() + sizeof(unsigned int) + step.name.size();
 		dataSize += Crypto::PwSaltSize + Crypto::ChestNonceSize;
-		auto data = Crypto::AllocMemory(dataSize);
-		MemoryStream memory(data, data.size());
+		auto data = SecureArray(dataSize);
+		MemoryStream memory(data.data(), data.size());
 
 		step.type = blockType;
 		if (!memory.Write(step.type))
 			return false;
 
-		if (step.salt.size() != Crypto::PwSaltSize || memory.Write(step.salt, step.salt.size()) != step.salt.size())
+		if (step.salt.size() != Crypto::PwSaltSize || memory.Write(step.salt.data(), step.salt.size()) != step.salt.size())
 			return false;
 
-		if (step.nonce.size() != Crypto::ChestNonceSize || memory.Write(step.nonce, step.nonce.size()) != step.nonce.size())
+		if (step.nonce.size() != Crypto::ChestNonceSize || memory.Write(step.nonce.data(), step.nonce.size()) != step.nonce.size())
 			return false;
 		
 		auto size = static_cast<unsigned int>(step.data.size());
 		if (static_cast<size_t>(size) != step.data.size() || !memory.Write(size))
 			return false;
 
-		if (memory.Write(step.data, step.data.size()) != step.data.size())
+		if (memory.Write(step.data.data(), step.data.size()) != step.data.size())
 			return false;
 
 		size = static_cast<unsigned int>(step.name.size());
 		if (static_cast<size_t>(size) != step.name.size() || !memory.Write(size))
 			return false;
 
-		if (memory.Write(step.name, step.name.size()) != step.name.size())
+		if (memory.Write(step.name.data(), step.name.size()) != step.name.size())
 			return false;
 
 		block = std::move(data);
 		blockType = BlockType::Challenge;
 	}
 
-	if (!stream.Write(block, static_cast<uint32_t>(block.size())))
+	if (!stream.Write(block.data(), static_cast<uint32_t>(block.size())))
 		return false;
 
 	if (!Container::EndWrite<VaultHeader>(stream))
@@ -176,11 +176,11 @@ bool Vault::UnlockStep(const SecureArray& key)
 		return false;
 	step.key = Crypto::CopyMemory(key);
 
-	mData = SecureArray::Wrap(step.data, step.data.size() - Crypto::ChestExtraSize, nullptr);
+	mData = SecureArray::CreateRef(step.data.data(), step.data.size() - Crypto::ChestExtraSize);
 	if (step.type == BlockType::Challenge && !ReadLockStep())
 		return false;
 	else if (step.type == BlockType::Data)
-		mBlock = SecureArray::Wrap(mData, mData.size(), nullptr);
+		mBlock = mData.getRef();
 	return true;
 }
 
@@ -190,7 +190,7 @@ void Vault::ResetSteps()
 
 	auto key = Crypto::AllocMemory(Crypto::ChestKeySize);
 	Crypto::FillRandomBytes(key);
-	auto keyRef = SecureArray::Wrap(key, key.size(), nullptr);
+	auto keyRef = key.getRef();
 	auto salt = Crypto::AllocMemory(Crypto::PwSaltSize);
 	Crypto::FillRandomBytes(salt);
 

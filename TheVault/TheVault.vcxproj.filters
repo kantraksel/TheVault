@@ -125,5 +125,8 @@
     <ClInclude Include="Utils\ImGuiUtils.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Utils\FixedArrayEx.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

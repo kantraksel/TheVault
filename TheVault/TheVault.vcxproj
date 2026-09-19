@@ -128,6 +128,7 @@
     <ClInclude Include="GUI\GUIManager.h" />
     <ClInclude Include="GUI\IRender.h" />
     <ClInclude Include="GUI\MainWindow.h" />
+    <ClInclude Include="Utils\FixedArrayEx.h" />
     <ClInclude Include="Utils\ImGuiUtils.h" />
     <ClInclude Include="Utils\SecureArray.h" />
     <ClInclude Include="Utils\StringUtils.h" />
