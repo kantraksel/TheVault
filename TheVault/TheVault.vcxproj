@@ -128,7 +128,6 @@
     <ClInclude Include="GUI\GUIManager.h" />
     <ClInclude Include="GUI\IRender.h" />
     <ClInclude Include="GUI\MainWindow.h" />
-    <ClInclude Include="Utils\FixedArrayEx.h" />
     <ClInclude Include="Utils\ImGuiUtils.h" />
     <ClInclude Include="Utils\SecureArray.h" />
     <ClInclude Include="Utils\StringUtils.h" />
@@ -144,29 +143,14 @@
     <ProjectReference Include="..\GhostFries\FileFormats\FileFormats.vcxproj">
       <Project>{3f154d8e-6f34-4f52-a87a-4b93cff9137c}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\GhostFries\Input\Input.vcxproj">
-      <Project>{d90bc244-f242-4e47-98e6-a18290005db7}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\GhostFries\PackFS\PackFS.vcxproj">
       <Project>{9026fbe6-088c-4e01-b55e-e7fed997ed02}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\GhostFries\Physics\Physics.vcxproj">
-      <Project>{f1a16bec-acdb-4754-b622-8db11441c296}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\GhostFries\Render2D\Render2D.vcxproj">
-      <Project>{2d1e9a33-7cb9-496f-8e07-0511e9e431ba}</Project>
     </ProjectReference>
     <ProjectReference Include="..\GhostFries\Render\Graphics.vcxproj">
       <Project>{7aeacbd7-813d-41e9-8555-a55045b303c7}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\GhostFries\SGPK\SGPK.vcxproj">
-      <Project>{ec2cb5f8-7a8d-4af5-982c-0a6e4b411563}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\GhostFries\SharedCore\SharedCore.vcxproj">
       <Project>{4903b93c-41a1-4b88-a8c5-c3afb14f3d01}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\GhostFries\SoundSys\Sounds.vcxproj">
-      <Project>{f9fe1d95-ee25-4d8f-a30e-ee4836dfcecf}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

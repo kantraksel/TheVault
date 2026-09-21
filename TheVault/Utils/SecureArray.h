@@ -1,6 +1,6 @@
 #pragma once
 #include <sodium.h>
-#include "FixedArrayEx.h"
+#include "Utility/FixedArray.h"
 
 struct CryptoAllocator
 {
@@ -18,4 +18,4 @@ struct CryptoAllocator
 	}
 };
 
-typedef FixedArrayEx<uint8_t, size_t, CryptoAllocator> SecureArray;
+typedef FixedArray<uint8_t, size_t, CryptoAllocator> SecureArray;

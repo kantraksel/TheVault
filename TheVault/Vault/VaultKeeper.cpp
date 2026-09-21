@@ -79,7 +79,7 @@ Future VaultKeeper::SendCmd(const std::function<uint64_t()>& func)
 {
 	Task task
 	{
-		.func = [&]() -> uint64_t
+		.func = [=]() -> uint64_t
 		{
 			if (func)
 				return func();

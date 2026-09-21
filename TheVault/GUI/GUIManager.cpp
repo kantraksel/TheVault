@@ -19,7 +19,7 @@ static LRESULT WndHandler(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return WindowManager::WndProc(hWnd, message, wParam, lParam);
 }
 
-GUIManager::GUIManager(Actor* pParent) : ICanvasComponent(pParent)
+GUIManager::GUIManager()
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -43,6 +43,7 @@ bool GUIManager::Initialize()
 		Logger::LogError("Failed to init ImGui backend");
 		return false;
 	}
+	GhostFries::GetRenderEngine().GetRenderEvent() += { MemberFunc<&GUIManager::Render>, this };
 	return true;
 }
 
@@ -59,8 +60,8 @@ bool GUIManager::InitImguiBackends()
 	
 	if (!io.BackendRendererUserData)
 	{
-		auto& ctx = GhostFries::GetRenderEngine().GetRenderContext();
-		auto* pContext = ctx.GetDeviceContext();
+		auto& ctx = GhostFries::GetRenderEngine();
+		auto* pContext = ctx.GetContext();
 		ID3D11Device* pDevice;
 		pContext->GetDevice(&pDevice);
 
@@ -74,7 +75,7 @@ bool GUIManager::InitImguiBackends()
 
 bool GUIManager::SetupWindow()
 {
-	auto& ctx = GhostFries::GetRenderEngine().GetRenderContext();
+	auto& ctx = GhostFries::GetRenderEngine();
 	auto& wnd = GhostFries::GetWindowManager();
 
 	SetLastError(0);
@@ -96,6 +97,7 @@ bool GUIManager::SetupWindow()
 		Logger::Log("Failed to center window");
 		return false;
 	}
+	ctx.SetVerticalSync(true);
 	return ctx.SetDisplayDimensions(sizeX, sizeY);
 }
 
@@ -110,7 +112,7 @@ void GUIManager::Shutdown()
 		ImGui_ImplWin32_Shutdown();
 }
 
-void GUIManager::Render(D2DEngine& engine)
+void GUIManager::Render()
 {
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();

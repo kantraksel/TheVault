@@ -1,9 +1,8 @@
 #pragma once
 #include <vector>
 #include "IRender.h"
-#include "Engine/Components/ICanvasComponent.h"
 
-class GUIManager : public ICanvasComponent
+class GUIManager
 {
 private:
 	std::vector<IRender*> objects;
@@ -12,12 +11,12 @@ private:
 	bool SetupWindow();
 
 public:
-	GUIManager(class Actor* pParent);
-	~GUIManager() override;
+	GUIManager();
+	~GUIManager();
 
 	bool Initialize();
 	void Shutdown();
 	
 	void RegisterObject(IRender* obj);
-	void Render(class D2DEngine& engine) override;
+	void Render();
 };

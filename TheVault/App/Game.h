@@ -1,6 +1,5 @@
 #pragma once
 #include "Engine/IGame.h"
-#include "Utility/ObjectPointer.h"
 #include "GUI/GUIManager.h"
 #include "GUI/MainWindow.h"
 #include "Vault/Vault.h"
@@ -11,7 +10,7 @@
 class Game : public IGame
 {
 private:
-	ObjectPointer<GUIManager> gui;
+	GUIManager gui;
 	MainWindow mainWnd;
 	Vault vault;
 	VaultKeeper keeper;
@@ -24,7 +23,6 @@ public:
 	Game();
 	~Game();
 
-	void OnRegisterComponents(PrefabFactory& factory) override;
 	bool OnInitialize() override;
 	bool OnShutdown() override;
 

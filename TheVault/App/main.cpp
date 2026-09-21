@@ -1,4 +1,3 @@
-#define GF_INCLUDE_SCENEMGR
 #define GF_INCLUDE_GRAPHICS
 #define GF_INCLUDE_WNDMGR
 #include "Engine/GhostFries.h"
@@ -7,17 +6,12 @@
 #undef CopyMemory
 #include "Vault/Crypto.h"
 #include "Game.h"
-#include "Engine/Components/CameraComponent.h"
 
 Game::Game() : passMgr(unsavedState)
 {
 }
 
 Game::~Game()
-{
-}
-
-void Game::OnRegisterComponents(PrefabFactory& factory)
 {
 }
 
@@ -33,16 +27,12 @@ bool Game::OnClose()
 
 bool Game::OnInitialize()
 {
-	GhostFries::GetWindowManager().SetTryCloseEvent(Function<bool, true>{ entt::delegate(entt::connect_arg<&Game::OnClose>, this) });
+	GhostFries::GetWindowManager().SetCloseCallback({ MemberFunc<&Game::OnClose>, this });
 
-	auto actor = GhostFries::GetSceneManager().GetActiveScene()->AddActor();
-	actor->AddComponent<CameraComponent>();
-	gui = actor->AddComponent<GUIManager>();
-
-	if (!gui->Initialize())
+	if (!gui.Initialize())
 		return false;
 
-	gui->RegisterObject(&mainWnd);
+	gui.RegisterObject(&mainWnd);
 	mainWnd.Initialize();
 	keeper.Init();
 	
@@ -66,7 +56,7 @@ Game game;
 bool Game::OnShutdown()
 {
 	keeper.Shutdown();
-	gui->Shutdown();
+	gui.Shutdown();
 	return true;
 }
 
@@ -78,6 +68,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (!Crypto::Init())
 		return -1;
 
-	return GhostFries::Main(hInstance, &game);
+	return GhostFries::Main(&game);
 }
 

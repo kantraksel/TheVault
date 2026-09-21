@@ -58,13 +58,13 @@ std::string_view PassManager::GetPassword(int i)
 	if (pass.type != Type::Text)
 		return {};
 
-	return std::string_view((char*)&pass.content, pass.content.size() - 1);
+	return std::string_view(reinterpret_cast<char*>(pass.content.data()), pass.content.size() - 1);
 }
 
 void PassManager::Add(const std::string_view& name, const std::string_view& password)
 {
 	FixedArrayUChar buff((unsigned int)password.size() + 1);
-	memcpy(buff, password.data(), password.size());
+	memcpy(buff.data(), password.data(), password.size());
 	buff[(unsigned int)password.size()] = 0;
 
 	Pass pass;
@@ -94,7 +94,7 @@ void PassManager::Change(int i, const std::string_view& password)
 		return;
 
 	FixedArrayUChar buff((unsigned int)password.size() + 1);
-	memcpy(buff, password.data(), password.size());
+	memcpy(buff.data(), password.data(), password.size());
 	buff[(unsigned int)password.size()] = 0;
 
 	pass.content = std::move(buff);
@@ -150,7 +150,7 @@ void PassManager::ExtractFile(int i, const std::wstring_view& file)
 		return;
 
 	FileWriter stream;
-	if (!stream.Open(file, true))
+	if (!stream.Open(file))
 		return;
 
 	auto& buff = pass.content;
@@ -168,7 +168,7 @@ std::string PassManager::Serialize()
 	for (auto& [name, pass] : mStore)
 	{
 		if (pass.type == Type::Text)
-			node[name] = std::string_view((char*)&pass.content, pass.content.size() - 1);
+			node[name] = std::string_view(reinterpret_cast<char*>(pass.content.data()), pass.content.size() - 1);
 		else if (pass.type == Type::File)
 		{
 			if (!Crypto::BufferToBase64(pass.content, fileBuffer))
@@ -197,7 +197,7 @@ std::string PassManager::Serialize()
 bool PassManager::Deserialize(const std::string_view& data)
 {
 	YamlDoc doc;
-	auto arr = FixedArrayChar::CreateArrayRef((char*)data.data(), (unsigned int)data.size());
+	auto arr = FixedArrayChar::CreateRef((char*)data.data(), (unsigned int)data.size());
 	if (!doc.Load(arr, L"internal"))
 		return false;
 
@@ -218,7 +218,7 @@ bool PassManager::Deserialize(const std::string_view& data)
 				continue;
 
 			FixedArrayUChar buff((unsigned int)str.size() + 1);
-			memcpy(buff, str.data(), str.size());
+			memcpy(buff.data(), str.data(), str.size());
 			buff[(unsigned int)str.size()] = 0;
 
 			Pass pass;
