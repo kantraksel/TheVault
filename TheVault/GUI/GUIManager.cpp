@@ -43,7 +43,7 @@ bool GUIManager::Initialize()
 		Logger::LogError("Failed to init ImGui backend");
 		return false;
 	}
-	GhostFries::GetRenderEngine().GetRenderEvent() += { MemberFunc<&GUIManager::Render>, this };
+	GhostFries::GetRenderEngine().GetRenderEvent() = { MemberFunc<&GUIManager::Render>, this };
 	return true;
 }
 

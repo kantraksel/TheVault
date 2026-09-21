@@ -68,6 +68,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	if (!Crypto::Init())
 		return -1;
 
-	return GhostFries::Main(&game);
+	return GhostFries::Main(&game, L"name: 'TheVault'\n");
 }
 
