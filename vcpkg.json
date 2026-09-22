@@ -1,0 +1,14 @@
+{
+  "dependencies": [
+    {
+      "name": "ryml",
+      "default-features": false
+    },
+    {
+      "name": "imgui",
+      "features": [ "dx11-binding", "win32-binding" ]
+    },
+    "libsodium"
+  ],
+  "builtin-baseline": "930ecc42b512b564571d767f70775d284a6fa307"
+}

@@ -1,0 +1,26 @@
+{
+  "version": 9,
+  "configurePresets": [
+    {
+      "name": "windows",
+      "displayName": "Windows",
+      "description": "Build app for Windows",
+      "binaryDir": "./Binary/cmake-windows",
+      "installDir": "./Binary/cmake-install",
+      "cacheVariables": {
+        "CMAKE_CONFIGURATION_TYPES": "Debug;RelWithDebInfo",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/Binary/cmake-install"
+      }
+    },
+    {
+      "inherits":  "windows",
+      "name": "windows-vcpkg",
+      "displayName": "Windows VCPKG",
+      "description": "Build app with vcpkg toolchain for Windows",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
+      }
+    }
+  ]
+}
