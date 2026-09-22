@@ -1,0 +1,55 @@
+name: Build app
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+
+    env:
+      VCPKG_DEFAULT_TRIPLET: x64-windows-static-md-release
+      VCPKG_BINARY_SOURCES_PATH: ${{ github.workspace }}/vcpkg_installed/binary_cache
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_installed/binary_cache,readwrite
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+          
+      - name: Restore dependency cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.VCPKG_BINARY_SOURCES_PATH }}
+          key: vcpkg-${{ env.VCPKG_DEFAULT_TRIPLET }}-${{ hashFiles('vcpkg.json') }}
+
+      - name: Install dependencies
+        uses: lukka/run-vcpkg@v11
+        with:
+          runVcpkgInstall: true
+          
+      - name: Save dependency cache
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.VCPKG_BINARY_SOURCES_PATH }}
+          key: vcpkg-${{ env.VCPKG_DEFAULT_TRIPLET }}-${{ hashFiles('vcpkg.json') }}
+
+      - name: Build app
+        run: |
+          cmake --preset windows-vcpkg ${{ github.workspace }}
+          cmake --build ${{ github.workspace }}/Binary/cmake-windows --config RelWithDebInfo
+          cmake --install ${{ github.workspace }}/Binary/cmake-windows
+        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: |
+            ${{ github.workspace }}/Binary/cmake-install/bin/*.exe
+            ${{ github.workspace }}/Binary/cmake-install/bin/*.pdb
