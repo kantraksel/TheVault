@@ -14,7 +14,6 @@ jobs:
       fail-fast: false
 
     env:
-      VCPKG_DEFAULT_TRIPLET: x64-windows-static-md
       VCPKG_BINARY_SOURCES_PATH: ${{ github.workspace }}/vcpkg_installed/binary_cache
       VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_installed/binary_cache,readwrite
 
@@ -25,7 +24,7 @@ jobs:
         uses: actions/cache/restore@v6
         with:
           path: ${{ env.VCPKG_BINARY_SOURCES_PATH }}
-          key: vcpkg-${{ env.VCPKG_DEFAULT_TRIPLET }}-${{ hashFiles('vcpkg.json') }}
+          key: vcpkg-x64-windows-static-md-${{ hashFiles('vcpkg.json') }}
 
       - uses: lukka/run-vcpkg@v11
 
@@ -37,18 +36,19 @@ jobs:
         uses: actions/cache/save@v6
         with:
           path: ${{ env.VCPKG_BINARY_SOURCES_PATH }}
-          key: vcpkg-${{ env.VCPKG_DEFAULT_TRIPLET }}-${{ hashFiles('vcpkg.json') }}
+          key: vcpkg-x64-windows-static-md-${{ hashFiles('vcpkg.json') }}
 
       - name: Build app
         run: |
           cmake --build ${{ github.workspace }}/Binary/cmake-windows --config RelWithDebInfo
           cmake --install ${{ github.workspace }}/Binary/cmake-windows
         
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v7
         with:
-          name: release
-          path: |
-            ${{ github.workspace }}/Binary/cmake-install/bin/*.exe
-            ${{ github.workspace }}/Binary/cmake-install/bin/*.pdb
-            ${{ env.VCPKG_BINARY_SOURCES_PATH }}
+          name: TheVault
+          path: ${{ github.workspace }}/Binary/cmake-install/bin/*.exe
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: TheVault.pdb
+          path: ${{ github.workspace }}/Binary/cmake-install/bin/*.pdb
