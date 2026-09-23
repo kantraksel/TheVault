@@ -1,0 +1,52 @@
+name: Build app
+
+on:
+  push:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+
+    env:
+      VCPKG_BINARY_SOURCES_PATH: ${{ github.workspace }}/vcpkg_installed/binary_cache
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_installed/binary_cache,readwrite
+
+    steps:
+      - uses: actions/checkout@v7
+          
+      - name: Restore dependencies from cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.VCPKG_BINARY_SOURCES_PATH }}
+          key: vcpkg-x64-windows-static-md-${{ hashFiles('vcpkg.json') }}
+
+      - uses: lukka/run-vcpkg@v11
+
+      - name: Configure app and install vcpkg dependencies
+        run: |
+          cmake --preset windows-vcpkg ${{ github.workspace }}
+          
+      - name: Save dependencies to cache
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.VCPKG_BINARY_SOURCES_PATH }}
+          key: vcpkg-x64-windows-static-md-${{ hashFiles('vcpkg.json') }}
+
+      - name: Build app
+        run: |
+          cmake --build ${{ github.workspace }}/Binary/cmake-windows --config RelWithDebInfo
+          cmake --install ${{ github.workspace }}/Binary/cmake-windows
+        
+      - uses: actions/upload-artifact@v7
+        with:
+          name: TheVault
+          path: ${{ github.workspace }}/Binary/cmake-install/bin/*.exe
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: TheVault.pdb
+          path: ${{ github.workspace }}/Binary/cmake-install/bin/*.pdb
