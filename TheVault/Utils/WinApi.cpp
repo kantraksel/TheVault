@@ -2,6 +2,7 @@
 #define GF_INCLUDE_WNDMGR
 #include "Engine/GhostFries.h"
 #include "WinApi.h"
+#include "Utility/StringUtils.h"
 
 bool WinApi::OpenFileDialog(const wchar_t* title, const std::wstring_view& defaultName, std::wstring& path)
 {
@@ -49,4 +50,34 @@ bool WinApi::SaveFileDialog(const wchar_t* title, const std::wstring_view& defau
 	}
 	path.clear();
 	return false;
+}
+
+bool WinApi::SetClipboardText(const std::string_view& text)
+{
+	if (!OpenClipboard(NULL))
+		return false;
+
+	auto data = StringUtils::Utf8ToWideString(text);
+
+	auto dataSize = (data.size() + 1) * sizeof(wchar_t);
+	auto hData = GlobalAlloc(GMEM_MOVEABLE, dataSize);
+	if (!hData)
+	{
+		CloseClipboard();
+		return false;
+	}
+	auto pData = GlobalLock(hData);
+	memcpy(pData, data.c_str(), dataSize);
+	GlobalUnlock(hData);
+
+	EmptyClipboard();
+	auto result = SetClipboardData(CF_UNICODETEXT, hData);
+	CloseClipboard();
+
+	if (result == NULL)
+	{
+		GlobalFree(hData);
+		return false;
+	}
+	return true;
 }

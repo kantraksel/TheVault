@@ -13,11 +13,13 @@ private:
 	bool openChangeFileModal : 1;
 	bool openChangeNameModal : 1;
 	bool openDeleteModal : 1;
+	bool openErrorModal : 1;
 	int modalIdx;
 
 	std::string nameInput;
 	std::string pwdInput;
 	std::wstring wBuffer;
+	std::string message;
 
 	void OpenSelectAddModal();
 	void OpenAddTextModal();
@@ -28,6 +30,7 @@ private:
 	void OpenChangeFileModal(int idx);
 	void OpenChangeNameModal(int idx);
 	void OpenDeleteModal(int idx);
+	void OpenErrorModal(const std::string_view& msg);
 
 	void RenderMain();
 	void RenderSelectAddModal();
@@ -39,6 +42,7 @@ private:
 	void RenderChangeFileModal();
 	void RenderChangeNameModal();
 	void RenderDeleteModal();
+	void RenderErrorModal();
 
 public:
 	MainApplet();

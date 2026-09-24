@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include "Utils/SecureArray.h"
-#include "Utility/FixedArray.h"
 
 namespace Crypto
 {
@@ -23,6 +22,6 @@ namespace Crypto
 	SecureArray CreateChest(const std::string_view& content, const SecureArray& key, const SecureArray& nonce);
 	bool OpenChestInPlace(SecureArray& chest, const SecureArray& key, const SecureArray& nonce);
 
-	FixedArrayUChar Base64ToBuffer(const std::string_view& text);
-	bool BufferToBase64(const FixedArrayUChar& buffer, std::string& text);
+	SecureArray Base64ToBuffer(const std::string_view& text);
+	bool BufferToBase64(const SecureArray& buffer, std::string& text);
 };

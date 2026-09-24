@@ -104,19 +104,19 @@ bool Crypto::OpenChestInPlace(SecureArray& chest, const SecureArray& key, const 
 	return true;
 }
 
-FixedArrayUChar Crypto::Base64ToBuffer(const std::string_view& text)
+SecureArray Crypto::Base64ToBuffer(const std::string_view& text)
 {
-	if (text.size() == 0 || text.size() % 4 != 0 || text.size() > INT32_MAX)
+	if (text.empty() || text.size() % 4 != 0 || text.size() > INT32_MAX)
 		return nullptr;
 
 	size_t size;
-	auto buffer = FixedArrayUChar((unsigned int)text.size() / 4 * 3);
+	auto buffer = SecureArray(text.size() / 4 * 3);
 	if (sodium_base642bin(buffer.data(), buffer.size(), text.data(), text.size(), nullptr, &size, nullptr, sodium_base64_VARIANT_URLSAFE) == 0)
-		return FixedArrayUChar::Copy(buffer.span(0, static_cast<unsigned int>(size)));
+		return SecureArray::Copy(buffer.span(0, size));
 	return nullptr;
 }
 
-bool Crypto::BufferToBase64(const FixedArrayUChar& buffer, std::string& text)
+bool Crypto::BufferToBase64(const SecureArray& buffer, std::string& text)
 {
 	text.resize(sodium_base64_encoded_len(buffer.size(), sodium_base64_VARIANT_URLSAFE));
 	if (sodium_bin2base64(text.data(), text.size(), buffer.data(), buffer.size(), sodium_base64_VARIANT_URLSAFE))

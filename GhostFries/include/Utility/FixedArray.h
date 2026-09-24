@@ -17,7 +17,7 @@ template<typename A, typename B>
 concept SimilarIntegrals = std::conjunction_v<std::is_integral<A>, std::is_integral<B>, std::bool_constant<sizeof(A) == sizeof(B)>>;
 
 template <typename T>
-struct Allocator
+struct FixedArrayAllocator
 {
 	static T* allocate(size_t n)
 	{
@@ -30,7 +30,7 @@ struct Allocator
 	}
 };
 
-template<DefaultConstructible T, typename S = size_t, typename Alloc = Allocator<T>>
+template<DefaultConstructible T, typename S = size_t, typename Alloc = FixedArrayAllocator<T>>
 class FixedArray
 {
 private:

@@ -6,7 +6,7 @@ struct CryptoAllocator
 {
 	static uint8_t* allocate(size_t n)
 	{
-		auto ptr =  reinterpret_cast<uint8_t*>(sodium_malloc(n));
+		auto ptr =  static_cast<uint8_t*>(sodium_malloc(n));
 		if (!ptr)
 			throw std::exception();
 		return ptr;

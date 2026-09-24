@@ -42,6 +42,7 @@ void MainApplet::Render()
 	RenderChangeFileModal();
 	RenderChangeNameModal();
 	RenderDeleteModal();
+	RenderErrorModal();
 }
 
 void MainApplet::OpenSelectAddModal()
@@ -95,6 +96,12 @@ void MainApplet::OpenDeleteModal(int idx)
 	openDeleteModal = true;
 }
 
+void MainApplet::OpenErrorModal(const std::string_view& msg)
+{
+	message = msg;
+	openErrorModal = true;
+}
+
 void MainApplet::RenderMain()
 {
 	BeginVisibleChildWindow("##MainApplet", ImVec2(617, 200), ImGuiChildFlags_Borders, ImGuiWindowFlags_MenuBar);
@@ -134,30 +141,34 @@ void MainApplet::RenderMain()
 			Text(StringUtils::ToStringNoAlloc(i + 1));
 
 			ImGui::TableNextColumn();
-			auto name = passMgr.GetName(i);
-			Text(name);
+			Text(passMgr.GetName(i));
 
 			ImGui::TableNextColumn();
-			if (passMgr.IsPasswordText(i))
+			if (passMgr.IsText(i))
 			{
 				if (ImGui::Button("Show"))
 					OpenShowTextModal(i);
 				ImGui::SameLine();
 				if (ImGui::Button("Copy"))
 				{
-					ImGui::SetClipboardText(passMgr.GetPassword(i).data());
+					WinApi::SetClipboardText(passMgr.GetText(i));
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Change"))
 					OpenChangeTextModal(i);
 			}
-			else if (passMgr.IsPasswordFile(i))
+			else if (passMgr.IsFile(i))
 			{
 				if (ImGui::Button("Extract"))
 				{
-					wBuffer = StringUtils::Utf8ToWideString(name);
+					wBuffer = StringUtils::Utf8ToWideString(passMgr.GetName(i));
 					if (WinApi::SaveFileDialog(L"Extract file", wBuffer, wBuffer))
-						passMgr.ExtractFile(i, wBuffer);
+					{
+						if (!passMgr.ExtractFile(i, wBuffer))
+						{
+							OpenErrorModal("Failed to extract file - check permissions or logs for more details");
+						}
+					}
 					wBuffer.clear();
 				}
 				ImGui::SameLine();
@@ -233,7 +244,7 @@ void MainApplet::RenderAddTextModal()
 		{
 			auto name = std::string_view(nameInput.data());
 			auto pwd = std::string_view(pwdInput.data());
-			game.GetPassManager().Add(name, pwd);
+			game.GetPassManager().AddText(name, pwd);
 			memset(pwdInput.data(), 0, pwdInput.capacity());
 			nameInput.clear();
 			ImGui::CloseCurrentPopup();
@@ -274,7 +285,10 @@ void MainApplet::RenderAddFileModal()
 			if (!wBuffer.empty())
 			{
 				auto name = std::string_view(nameInput.data());
-				game.GetPassManager().AddFile(name, wBuffer);
+				if (!game.GetPassManager().AddFile(name, wBuffer))
+				{
+					OpenErrorModal("Failed to read file - check permissions or logs for more details");
+				}
 				wBuffer.clear();
 				nameInput.clear();
 				ImGui::CloseCurrentPopup();
@@ -327,13 +341,12 @@ void MainApplet::RenderShowTextModal()
 	if (ImGui::BeginPopupModal("Password details", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		auto& passMgr = game.GetPassManager();
-		auto pwd = passMgr.GetPassword(modalIdx);
 		Text(passMgr.GetName(modalIdx));
-		Text(pwd);
+		Text(passMgr.GetText(modalIdx));
 
 		if (ImGui::Button("Copy"))
 		{
-			ImGui::SetClipboardText(pwd.data());
+			WinApi::SetClipboardText(passMgr.GetText(modalIdx));
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Change"))
@@ -369,7 +382,7 @@ void MainApplet::RenderChangeTextModal()
 		if (submit || submit2)
 		{
 			auto pwd = std::string_view(pwdInput.data());
-			passMgr.Change(modalIdx, pwd);
+			passMgr.SetText(modalIdx, pwd);
 			memset(pwdInput.data(), 0, pwdInput.capacity());
 			ImGui::CloseCurrentPopup();
 		}
@@ -403,12 +416,11 @@ void MainApplet::RenderChangeFileModal()
 		static std::wstring file;
 
 		auto& passMgr = game.GetPassManager();
-		auto name = passMgr.GetName(modalIdx);
-		Text(name);
+		Text(passMgr.GetName(modalIdx));
 
 		if (ImGui::Button("Select file"))
 		{
-			wBuffer = StringUtils::Utf8ToWideString(name);
+			wBuffer = StringUtils::Utf8ToWideString(passMgr.GetName(modalIdx));
 			WinApi::OpenFileDialog(L"Replace file in vault", wBuffer, file);
 			wBuffer.clear();
 		}
@@ -418,7 +430,10 @@ void MainApplet::RenderChangeFileModal()
 		{
 			if (!file.empty())
 			{
-				passMgr.ChangeFile(modalIdx, file);
+				if (!passMgr.SetFile(modalIdx, file))
+				{
+					OpenErrorModal("Failed to read file - check permissions or logs for more details");
+				}
 				file.clear();
 				ImGui::CloseCurrentPopup();
 			}
@@ -457,7 +472,7 @@ void MainApplet::RenderChangeNameModal()
 		if (ImGui::Button("Set"))
 		{
 			auto name = std::string_view(nameInput.data());
-			game.GetPassManager().ChangeName(modalIdx, name);
+			game.GetPassManager().SetName(modalIdx, name);
 			nameInput.clear();
 			ImGui::CloseCurrentPopup();
 		}
@@ -496,6 +511,27 @@ void MainApplet::RenderDeleteModal()
 		ImGui::SameLine();
 		if (ImGui::Button("No"))
 			ImGui::CloseCurrentPopup();
+
+		ImGui::EndPopup();
+	}
+}
+
+void MainApplet::RenderErrorModal()
+{
+	if (openErrorModal)
+	{
+		openErrorModal = false;
+		ImGui::OpenPopup("Error");
+	}
+
+	if (ImGui::BeginPopupModal("Error", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		Text(message);
+		if (ImGui::Button("Cancel"))
+		{
+			message.clear();
+			ImGui::CloseCurrentPopup();
+		}
 
 		ImGui::EndPopup();
 	}
