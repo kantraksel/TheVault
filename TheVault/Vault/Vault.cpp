@@ -77,8 +77,6 @@ bool Vault::ReadLockStep()
 		return false;
 	auto name = SecureArray::CreateRef(memory.GetCurrentData(), size);
 
-	if (type == BlockType::Data)
-		mData = data.getRef();
 	mLockSteps.push_back(LockStep
 		{
 			.salt = std::move(salt),
@@ -110,8 +108,7 @@ bool Vault::Place(const std::wstring_view& file)
 			step.nonce = SecureArray(Crypto::ChestNonceSize);
 		Crypto::FillRandomBytes(step.nonce);
 
-		auto content = std::string_view(reinterpret_cast<char*>(block.data()), block.size());
-		step.data = Crypto::CreateChest(content, step.key, step.nonce);
+		step.data = Crypto::CreateChest(block, step.key, step.nonce);
 		if (!step.data)
 			return false;
 
@@ -148,7 +145,8 @@ bool Vault::Place(const std::wstring_view& file)
 		blockType = BlockType::Challenge;
 	}
 
-	if (!stream.Write(block.data(), static_cast<uint32_t>(block.size())))
+	auto size = static_cast<uint32_t>(block.size());
+	if (static_cast<uint64_t>(size) != block.size() || !stream.Write(block.data(), size))
 		return false;
 
 	if (!Container::EndWrite<VaultHeader>(stream))
@@ -168,7 +166,7 @@ SecureArray Vault::CreateKey(const std::string_view& password, SecureArray& salt
 
 bool Vault::UnlockStep(const SecureArray& key)
 {
-	if (mLockSteps.size() < 1 || !key)
+	if (mLockSteps.empty())
 		return false;
 
 	auto& step = mLockSteps.back();
@@ -176,11 +174,19 @@ bool Vault::UnlockStep(const SecureArray& key)
 		return false;
 	step.key = Crypto::CopyMemory(key);
 
-	mData = SecureArray::CreateRef(step.data.data(), step.data.size() - Crypto::ChestExtraSize);
-	if (step.type == BlockType::Challenge && !ReadLockStep())
-		return false;
+	auto block = step.data.span(0, step.data.size() - Crypto::ChestExtraSize);
+	if (step.type == BlockType::Challenge)
+	{
+		auto oldBlock = mData;
+		mData = block;
+		if (!ReadLockStep())
+		{
+			mData = oldBlock;
+			return false;
+		}
+	}
 	else if (step.type == BlockType::Data)
-		mBlock = mData.getRef();
+		mBlock = block;
 	return true;
 }
 
@@ -196,9 +202,9 @@ void Vault::ResetSteps()
 
 	mLockSteps.push_back(LockStep
 		{
-			.key = std::move(keyRef),
+			.key = std::move(key),
 			.salt = std::move(salt),
-			.name = std::move(key),
+			.name = std::move(keyRef),
 			.type = BlockType::Challenge,
 		});
 }

@@ -31,10 +31,10 @@ private:
 	std::mutex taskMutex;
 	std::list<struct Task> tasks;
 
-	void Run(std::stop_token token);
+	void Run(const std::stop_token& token);
 	Future SendCmd(const std::function<uint64_t()>& f);
 	Future SendCmd(const std::function<uint64_t(const SecureArray&)>& f, const SecureArray& arg);
-	Future SendCmd(const std::function<uint64_t(const std::wstring&)>& f, const std::wstring_view& arg);
+	Future SendCmd(const std::function<uint64_t(const std::wstring&)>& f, const std::wstring& arg);
 
 	uint64_t OpenVaultDeferred(const std::wstring& file);
 	uint64_t CreateVaultDeferred(const std::wstring& file);
@@ -43,6 +43,8 @@ private:
 	uint64_t SetHintKeyDeferred(int i, const SecureArray& password);
 	uint64_t SaveVaultDeferred(bool close);
 
+	void ResetState();
+
 public:
 	VaultKeeper();
 	~VaultKeeper();
@@ -50,8 +52,8 @@ public:
 	void Init();
 	void Shutdown();
 
-	Future OpenVault(const std::wstring_view& file);
-	Future CreateVault(const std::wstring_view& file);
+	Future OpenVault(const std::wstring& file);
+	Future CreateVault(const std::wstring& file);
 	Future CloseVault();
 	Future SaveVault();
 	Future SaveCloseVault();

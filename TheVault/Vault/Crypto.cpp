@@ -76,7 +76,7 @@ SecureArray Crypto::HashPassword(const std::string_view& password, const SecureA
 	return hash;
 }
 
-SecureArray Crypto::CreateChest(const std::string_view& content, const SecureArray& key, const SecureArray& nonce)
+SecureArray Crypto::CreateChest(const SecureArray& content, const SecureArray& key, const SecureArray& nonce)
 {
 	if (content.empty() || key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES)
 		return nullptr;
@@ -85,7 +85,7 @@ SecureArray Crypto::CreateChest(const std::string_view& content, const SecureArr
 	if (!chest)
 		return nullptr;
 
-	int result = crypto_secretbox_easy(chest.data(), (unsigned char*)content.data(), content.size(), nonce.data(), key.data());
+	int result = crypto_secretbox_easy(chest.data(), content.data(), content.size(), nonce.data(), key.data());
 	if (result < 0)
 		return nullptr;
 
@@ -94,7 +94,7 @@ SecureArray Crypto::CreateChest(const std::string_view& content, const SecureArr
 
 bool Crypto::OpenChestInPlace(SecureArray& chest, const SecureArray& key, const SecureArray& nonce)
 {
-	if (!chest || key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES || chest.size() <= crypto_secretbox_MACBYTES)
+	if (key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES || chest.size() <= crypto_secretbox_MACBYTES)
 		return false;
 
 	int result = crypto_secretbox_open_easy(chest.data(), chest.data(), chest.size(), nonce.data(), key.data());

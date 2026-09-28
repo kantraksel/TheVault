@@ -19,7 +19,7 @@ namespace Crypto
 
 	SecureArray HashPassword(const std::string_view& password, const SecureArray& salt);
 
-	SecureArray CreateChest(const std::string_view& content, const SecureArray& key, const SecureArray& nonce);
+	SecureArray CreateChest(const SecureArray& content, const SecureArray& key, const SecureArray& nonce);
 	bool OpenChestInPlace(SecureArray& chest, const SecureArray& key, const SecureArray& nonce);
 
 	SecureArray Base64ToBuffer(const std::string_view& text);
