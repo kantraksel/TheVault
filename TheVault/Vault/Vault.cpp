@@ -7,7 +7,7 @@
 struct VaultHeader
 {
 	static constexpr unsigned short Magic = 0x5645;
-	static constexpr unsigned short Version = 2;
+	static constexpr unsigned short Version = 3;
 };
 
 Vault::Vault()
@@ -45,7 +45,7 @@ bool Vault::Open(const std::wstring_view& file)
 	mBuffer = std::move(data);
 	mData = mBuffer.getRef();
 
-	if (!ReadLockStep() || !UnlockStep(mLockSteps.front().name))
+	if (!ReadLockStep() || !DecryptStep(mLockSteps.front().name) || !ReadStep())
 		return false;
 	return true;
 }
@@ -53,10 +53,6 @@ bool Vault::Open(const std::wstring_view& file)
 bool Vault::ReadLockStep()
 {
 	MemoryStream memory(mData.data(), mData.size());
-
-	BlockType type;
-	if (!memory.Read(type))
-		return false;
 
 	if (memory.GetReadableSize() < Crypto::PwSaltSize + Crypto::ChestNonceSize)
 		return false;
@@ -81,7 +77,7 @@ bool Vault::ReadLockStep()
 			.nonce = std::move(nonce),
 			.data = std::move(data),
 			.name = std::move(name),
-			.type = type,
+			.type = BlockType::Challenge,
 		});
 	return true;
 }
@@ -116,18 +112,19 @@ bool Vault::Place(const std::wstring_view& file)
 			step.nonce = SecureArray(Crypto::ChestNonceSize);
 		Crypto::FillRandomBytes(step.nonce);
 
-		step.data = Crypto::CreateChest(block, step.key, step.nonce);
+		auto data = SecureArray(sizeof(BlockType) + block.size());
+		MemoryStream stream(data.data(), data.size());
+		if (!stream.Write(blockType) || !stream.Write(block.data(), block.size()))
+			return false;
+
+		step.data = Crypto::CreateChest(data, step.key, step.nonce);
 		if (!step.data)
 			return false;
 
-		size_t dataSize = sizeof(BlockType) + sizeof(unsigned int) + step.data.size() + sizeof(unsigned int) + step.name.size();
+		size_t dataSize = sizeof(unsigned int) + step.data.size() + sizeof(unsigned int) + step.name.size();
 		dataSize += Crypto::PwSaltSize + Crypto::ChestNonceSize;
-		auto data = SecureArray(dataSize);
+		data = SecureArray(dataSize);
 		MemoryStream memory(data.data(), data.size());
-
-		step.type = blockType;
-		if (!memory.Write(step.type))
-			return false;
 
 		if (step.salt.size() != Crypto::PwSaltSize || memory.Write(step.salt.data(), step.salt.size()) != step.salt.size())
 			return false;
@@ -172,7 +169,7 @@ SecureArray Vault::CreateKey(const std::string_view& password, SecureArray& salt
 	return Crypto::HashPassword(password, salt);
 }
 
-bool Vault::UnlockStep(const SecureArray& key)
+bool Vault::DecryptStep(const SecureArray& key)
 {
 	if (mLockSteps.empty())
 		return false;
@@ -181,8 +178,21 @@ bool Vault::UnlockStep(const SecureArray& key)
 	if (!Crypto::OpenChestInPlace(step.data, key, step.nonce))
 		return false;
 	step.key = SecureArray::Copy(key);
+	return true;
+}
+
+bool Vault::ReadStep()
+{
+	if (mLockSteps.empty())
+		return false;
+	auto& step = mLockSteps.back();
 
 	auto block = step.data.span(0, step.data.size() - Crypto::ChestExtraSize);
+	MemoryStream memory(block.data(), block.size());
+	if (!memory.Read(step.type))
+		return false;
+	block = block.span(sizeof(step.type));
+
 	if (step.type == BlockType::Challenge)
 	{
 		auto oldBlock = mData;

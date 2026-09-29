@@ -4,6 +4,8 @@
 #include "Files/FileStream.h"
 #include "Vault/Crypto.h"
 
+constexpr uint32_t DocumentVersion = 2;
+
 enum struct PassType
 {
 	Text,
@@ -92,7 +94,7 @@ std::string_view PassManager::GetText(int i)
 static SecureArray CopyPassword(const std::string_view& password)
 {
 	SecureArray buff(password.size() + 1);
-	memset(buff.data(), 0, buff.size());
+	Crypto::ZeroMemory(buff);
 	buff.copyFrom(SecureArray::CreateRef(password.data(), password.size()));
 	return buff;
 }
@@ -204,7 +206,7 @@ bool PassManager::ExtractFile(int i, const std::wstring_view& file)
 std::string PassManager::Serialize()
 {
 	YamlDoc doc;
-	doc["version"] = 1;
+	doc["version"] = DocumentVersion;
 	auto node = doc["password"].SetMap();
 
 	std::string fileBuffer;
@@ -212,10 +214,13 @@ std::string PassManager::Serialize()
 	{
 		if (pass.type == PassType::Text)
 		{
+			auto child = node[name].SetMap();
+			child["type"] = "Text";
+
 			if (pass.content.empty())
-				node[name] = "";
+				child["content"] = "";
 			else
-				node[name] = std::string_view(reinterpret_cast<char*>(pass.content.data()), pass.content.size() - 1);
+				child["content"] = std::string_view(reinterpret_cast<char*>(pass.content.data()), pass.content.size() - 1);
 		}
 		else if (pass.type == PassType::File)
 		{
@@ -226,7 +231,7 @@ std::string PassManager::Serialize()
 			}
 
 			auto child = node[name].SetMap();
-			child["type"] = "File";
+			child["type"] = "Data";
 			child["content"] = fileBuffer;
 		}
 		else
@@ -258,7 +263,7 @@ bool PassManager::Deserialize(const std::string_view& data)
 	}
 
 	uint32_t version = 0;
-	if (!doc["version"].TryGetUInt(version) || version != 1)
+	if (!doc["version"].TryGetUInt(version) || version != DocumentVersion)
 	{
 		Logger::LogError("Failed to read document: unsupported version {}", version);
 		return false;
@@ -273,21 +278,7 @@ bool PassManager::Deserialize(const std::string_view& data)
 
 	for (YamlNode n : node.Children())
 	{
-		if (n.HasValue())
-		{
-			std::string_view str;
-			if (!n.TryGetString(str))
-			{
-				Logger::LogWarn("Invalid type of entry {} - string expected", n.GetKey());
-				continue;
-			}
-
-			Pass pass;
-			pass.type = PassType::Text;
-			pass.content = CopyPassword(str);
-			mStore.emplace_back(std::string(n.GetKey()), std::move(pass));
-		}
-		else if (n.IsMap())
+		if (n.IsMap())
 		{
 			std::string_view type;
 			if (!n["type"].TryGetString(type))
@@ -296,12 +287,12 @@ bool PassManager::Deserialize(const std::string_view& data)
 				continue;
 			}
 
-			if (type == "File")
+			if (type == "Data")
 			{
 				std::string_view content;
-				if (!n["content"].TryGetString(content))
+				if (!n["value"].TryGetString(content))
 				{
-					Logger::LogWarn("Invalid type of File entry {} - string expected", n.GetKey());
+					Logger::LogWarn("Invalid type of entry {} - string expected", n.GetKey());
 					continue;
 				}
 
@@ -310,11 +301,25 @@ bool PassManager::Deserialize(const std::string_view& data)
 				pass.content = Crypto::Base64ToBuffer(content);
 				mStore.emplace_back(std::string(n.GetKey()), std::move(pass));
 			}
+			else if (type == "Text")
+			{
+				std::string_view content;
+				if (!n["value"].TryGetString(content))
+				{
+					Logger::LogWarn("Invalid type of entry {} - string expected", n.GetKey());
+					continue;
+				}
+
+				Pass pass;
+				pass.type = PassType::Text;
+				pass.content = CopyPassword(content);
+				mStore.emplace_back(std::string(n.GetKey()), std::move(pass));
+			}
 			else
 				Logger::LogWarn("Invalid type of entry {} - unknown type {}", n.GetKey(), type);
 		}
 		else
-			Logger::LogWarn("Invalid type of entry {} - not a value or object", n.GetKey());
+			Logger::LogWarn("Invalid type of entry {} - not an object", n.GetKey());
 	}
 	return true;
 }

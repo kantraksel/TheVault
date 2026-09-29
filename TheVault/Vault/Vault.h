@@ -36,7 +36,8 @@ public:
 	
 	bool Open(const std::wstring_view& file);
 	SecureArray CreateKey(const std::string_view& password, SecureArray& salt);
-	bool UnlockStep(const SecureArray& key);
+	bool DecryptStep(const SecureArray& key);
+	bool ReadStep();
 
 	void ResetSteps();
 	bool AddStep(const SecureArray& name, const SecureArray& key, const SecureArray& salt);

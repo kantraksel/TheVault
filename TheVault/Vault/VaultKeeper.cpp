@@ -244,8 +244,8 @@ uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 		return RaiseError("Failed to create password key");
 
 	Logger::Log("Unlocking next layer");
-	if (!vault.UnlockStep(key))
-		return RaiseError("Failed to unlock next layer");
+	if (!vault.DecryptStep(key))
+		return RaiseError("Invalid password");
 
 	{
 		std::lock_guard lock(chainMutex);
@@ -253,6 +253,9 @@ uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 		currentStep.key = std::move(key);
 		currentStep.salt = std::move(salt);
 	}
+
+	if (!vault.ReadStep())
+		return RaiseError("Failed to read next layer", true);
 
 	auto& block = vault.GetBlock();
 	if (block)
@@ -370,6 +373,8 @@ uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 	auto content = game.GetPassManager().Serialize();
 	if (content.empty())
 		return RaiseError("Failed to serialize content");
+	if (content.size() > INT32_MAX)
+		return RaiseError("Failed to save vault - too much data (max 2GB)");
 
 	Logger::Log("Placing vault");
 
