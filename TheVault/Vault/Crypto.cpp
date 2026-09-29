@@ -13,23 +13,6 @@ bool Crypto::Init()
 	return sodium_init() >= 0;
 }
 
-static void FreeMemory(void* ptr)
-{
-	sodium_free(ptr);
-}
-
-SecureArray Crypto::AllocMemory(size_t size)
-{
-	try
-	{
-		return SecureArray(size);
-	}
-	catch (...)
-	{
-		return nullptr;
-	}
-}
-
 void Crypto::ZeroMemory(SecureArray& memory)
 {
 	sodium_memzero(memory.data(), memory.size());
@@ -40,33 +23,19 @@ void Crypto::FillRandomBytes(SecureArray& memory)
 	randombytes_buf(memory.data(), memory.size());
 }
 
-SecureArray Crypto::CopyMemory(const SecureArray& memory)
-{
-	try
-	{
-		return SecureArray::Copy(memory);
-	}
-	catch (...)
-	{
-		return nullptr;
-	}
-}
-
 SecureArray Crypto::HashPassword(const std::string_view& password, const SecureArray& salt)
 {
 	if (password.size() < crypto_pwhash_PASSWD_MIN || password.size() > crypto_pwhash_PASSWD_MAX || salt.size() != crypto_pwhash_SALTBYTES)
 		return nullptr;
 
-	auto hash = AllocMemory(crypto_secretbox_KEYBYTES);
-	if (!hash)
-		return nullptr;
+	auto hash = SecureArray(crypto_secretbox_KEYBYTES);
 
 #if _DEBUG
 	constexpr uint64_t OpsLimit = crypto_pwhash_OPSLIMIT_INTERACTIVE;
 	constexpr size_t MemLimit = crypto_pwhash_MEMLIMIT_INTERACTIVE;
 #else
-	constexpr uint64_t OpsLimit = crypto_pwhash_OPSLIMIT_SENSITIVE;
-	constexpr size_t MemLimit = crypto_pwhash_MEMLIMIT_SENSITIVE;
+	constexpr uint64_t OpsLimit = crypto_pwhash_OPSLIMIT_SENSITIVE + 15;
+	constexpr size_t MemLimit = crypto_pwhash_MEMLIMIT_SENSITIVE * 2;
 #endif
 
 	int result = crypto_pwhash(hash.data(), hash.size(), password.data(), password.size(), salt.data(), OpsLimit, MemLimit, crypto_pwhash_ALG_DEFAULT);
@@ -78,13 +47,10 @@ SecureArray Crypto::HashPassword(const std::string_view& password, const SecureA
 
 SecureArray Crypto::CreateChest(const SecureArray& content, const SecureArray& key, const SecureArray& nonce)
 {
-	if (content.empty() || key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES)
+	if (content.empty() || content.size() > static_cast<size_t>(INT64_MAX) || key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES)
 		return nullptr;
 
-	auto chest = AllocMemory(content.size() + crypto_secretbox_MACBYTES);
-	if (!chest)
-		return nullptr;
-
+	auto chest = SecureArray(content.size() + crypto_secretbox_MACBYTES);
 	int result = crypto_secretbox_easy(chest.data(), content.data(), content.size(), nonce.data(), key.data());
 	if (result < 0)
 		return nullptr;

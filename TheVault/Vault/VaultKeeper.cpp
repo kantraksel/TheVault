@@ -238,7 +238,7 @@ uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 
 	Logger::Log("Creating password key");
 	auto& vault = game.GetVault();
-	auto salt = Crypto::CopyMemory(vault.GetStepSalt());
+	auto salt = SecureArray::Copy(vault.GetStepSalt());
 	auto key = vault.CreateKey(pass, salt);
 	if (!key)
 		return RaiseError("Failed to create password key");
@@ -259,7 +259,9 @@ uint64_t VaultKeeper::SubmitPasswordDeferred(const SecureArray& password)
 	{
 		Logger::Log("Deserializing content");
 		auto& passMgr = game.GetPassManager();
-		if (!passMgr.Deserialize(std::string_view(reinterpret_cast<const char*>(block.data()), block.size())))
+
+		auto size = strnlen_s(reinterpret_cast<const char*>(block.data()), block.size());
+		if (!passMgr.Deserialize(std::string_view(reinterpret_cast<const char*>(block.data()), size)))
 			return RaiseError("Failed to deserialize content", true);
 		Logger::Log("Opened vault");
 
@@ -387,7 +389,11 @@ uint64_t VaultKeeper::SaveVaultDeferred(bool close)
 		}
 	}
 
-	vault.GetBlock() = SecureArray::CreateRef(content.data(), content.size());
+	auto& block = vault.GetBlock();
+	block = SecureArray(content.size() + (1024 - content.size() % 1024) % 1024);
+	Crypto::ZeroMemory(block);
+	block.copyFrom(SecureArray::CreateRef(content.data(), content.size()));
+
 	if (!vault.Place(file))
 	{
 		vault.Reset();

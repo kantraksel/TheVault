@@ -23,12 +23,7 @@ LockApplet::~LockApplet()
 
 void LockApplet::Initialize()
 {
-	passwordInput = Crypto::AllocMemory(256);
-	if (!passwordInput)
-	{
-		game.GetKeeper().RaiseError("Failed to allocate memory", true);
-		return;
-	}
+	passwordInput = SecureArray(256);
 	Crypto::ZeroMemory(passwordInput);
 }
 

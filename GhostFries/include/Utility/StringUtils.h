@@ -19,12 +19,20 @@ namespace StringUtils
     }
 
 	std::string Trim(const std::string& str);
+}
 
 #ifdef _HRESULT_DEFINED
 #if _DEBUG
+namespace StringUtils
+{
 	std::string Format(HRESULT hr);
 	std::wstring FormatW(HRESULT hr);
+}
 #else
+#include <format>
+
+namespace StringUtils
+{
 	inline std::string Format(HRESULT hr)
 	{
 		return std::format("{:X}", hr);
@@ -33,6 +41,6 @@ namespace StringUtils
 	{
 		return std::format(L"{:X}", hr);
 	}
-#endif
-#endif
 }
+#endif
+#endif

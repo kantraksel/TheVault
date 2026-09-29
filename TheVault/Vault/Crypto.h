@@ -12,10 +12,8 @@ namespace Crypto
 	extern const size_t ChestExtraSize;
 
 	bool Init();
-	SecureArray AllocMemory(size_t size);
 	void ZeroMemory(SecureArray& memory);
 	void FillRandomBytes(SecureArray& memory);
-	SecureArray CopyMemory(const SecureArray& memory);
 
 	SecureArray HashPassword(const std::string_view& password, const SecureArray& salt);
 

@@ -1,3 +1,4 @@
+#include <filesystem>
 #include "Vault.h"
 #include "Crypto.h"
 #include "Files/Container.h"
@@ -37,10 +38,7 @@ bool Vault::Open(const std::wstring_view& file)
 	if (!Container::Open<VaultHeader>(stream, header, dataSize) || dataSize == 0)
 		return false;
 
-	auto data = Crypto::AllocMemory(dataSize);
-	if (!data)
-		return false;
-
+	auto data = SecureArray(dataSize);
 	if (stream.Read(data.data(), static_cast<uint32_t>(data.size())) != data.size())
 		return false;
 
@@ -90,6 +88,16 @@ bool Vault::ReadLockStep()
 
 bool Vault::Place(const std::wstring_view& file)
 {
+	std::error_code ec;
+	auto bakFile = std::format(L"{}.bak", file);
+	std::filesystem::remove(bakFile, ec);
+	if (std::filesystem::exists(file, ec))
+	{
+		std::filesystem::rename(file, bakFile, ec);
+		if (ec)
+			return false;
+	}
+
 	FileWriter stream;
 	if (!stream.Open(file))
 		return false;
@@ -158,7 +166,7 @@ SecureArray Vault::CreateKey(const std::string_view& password, SecureArray& salt
 {
 	if (!salt)
 	{
-		salt = Crypto::AllocMemory(Crypto::PwSaltSize);
+		salt = SecureArray(Crypto::PwSaltSize);
 		Crypto::FillRandomBytes(salt);
 	}
 	return Crypto::HashPassword(password, salt);
@@ -172,7 +180,7 @@ bool Vault::UnlockStep(const SecureArray& key)
 	auto& step = mLockSteps.back();
 	if (!Crypto::OpenChestInPlace(step.data, key, step.nonce))
 		return false;
-	step.key = Crypto::CopyMemory(key);
+	step.key = SecureArray::Copy(key);
 
 	auto block = step.data.span(0, step.data.size() - Crypto::ChestExtraSize);
 	if (step.type == BlockType::Challenge)
@@ -194,10 +202,10 @@ void Vault::ResetSteps()
 {
 	mLockSteps.clear();
 
-	auto key = Crypto::AllocMemory(Crypto::ChestKeySize);
+	auto key = SecureArray(Crypto::ChestKeySize);
 	Crypto::FillRandomBytes(key);
 	auto keyRef = key.getRef();
-	auto salt = Crypto::AllocMemory(Crypto::PwSaltSize);
+	auto salt = SecureArray(Crypto::PwSaltSize);
 	Crypto::FillRandomBytes(salt);
 
 	mLockSteps.push_back(LockStep
@@ -216,9 +224,9 @@ bool Vault::AddStep(const SecureArray& name, const SecureArray& key, const Secur
 
 	mLockSteps.push_back(LockStep
 		{
-			.key = Crypto::CopyMemory(key),
-			.salt = Crypto::CopyMemory(salt),
-			.name = Crypto::CopyMemory(name),
+			.key = SecureArray::Copy(key),
+			.salt = SecureArray::Copy(salt),
+			.name = SecureArray::Copy(name),
 			.type = BlockType::Challenge,
 		});
 	return true;
