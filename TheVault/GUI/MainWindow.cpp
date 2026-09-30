@@ -220,7 +220,7 @@ void MainWindow::RenderConfirmExitModal()
 		if (ImGui::Button("Yes"))
 		{
 			ImGui::CloseCurrentPopup();
-			ProcessVaultTask(game.GetKeeper().SaveCloseVault(), "Saving vault...");
+			ProcessVaultTask(game.GetKeeper().SaveVault(true), "Saving vault...");
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("No"))

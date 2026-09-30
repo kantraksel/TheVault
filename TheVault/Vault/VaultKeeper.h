@@ -2,11 +2,7 @@
 #include <string>
 #include <vector>
 #include <mutex>
-#include <thread>
-#include <condition_variable>
 #include <future>
-#include <list>
-#include <functional>
 #include "Utils/SecureArray.h"
 
 class VaultKeeper
@@ -26,37 +22,16 @@ private:
 	std::mutex chainMutex;
 	std::wstring file; //used only in the thread
 
-	std::jthread thread;
-	std::condition_variable threadCvar;
-	std::mutex taskMutex;
-	std::list<struct Task> tasks;
-
-	void Run(const std::stop_token& token);
-	Future SendCmd(const std::function<uint64_t()>& f);
-	Future SendCmd(const std::function<uint64_t(const SecureArray&)>& f, const SecureArray& arg);
-	Future SendCmd(const std::function<uint64_t(const std::wstring&)>& f, const std::wstring& arg);
-
-	uint64_t OpenVaultDeferred(const std::wstring& file);
-	uint64_t CreateVaultDeferred(const std::wstring& file);
-	uint64_t CloseVaultDeferred();
-	uint64_t SubmitPasswordDeferred(const SecureArray& password);
-	uint64_t SetHintKeyDeferred(int i, const SecureArray& password);
-	uint64_t SaveVaultDeferred(bool close);
-
 	void ResetState();
 
 public:
 	VaultKeeper();
 	~VaultKeeper();
 
-	void Init();
-	void Shutdown();
-
 	Future OpenVault(const std::wstring& file);
 	Future CreateVault(const std::wstring& file);
 	Future CloseVault();
-	Future SaveVault();
-	Future SaveCloseVault();
+	Future SaveVault(bool close = false);
 
 	void GetLastHint(std::string& str);
 	Future SubmitPassword(const SecureArray& password);

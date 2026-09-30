@@ -4,6 +4,7 @@
 #include "GUI/MainWindow.h"
 #include "Vault/Vault.h"
 #include "Vault/VaultKeeper.h"
+#include "Vault/WorkerThread.h"
 #include "PassManager.h"
 #include "UnsavedState.h"
 
@@ -14,6 +15,7 @@ private:
 	MainWindow mainWnd;
 	Vault vault;
 	VaultKeeper keeper;
+	WorkerThread worker;
 	PassManager passMgr;
 	UnsavedState unsavedState;
 
@@ -29,6 +31,7 @@ public:
 	auto& GetMainWindow() { return mainWnd; }
 	auto& GetVault() { return vault; }
 	auto& GetKeeper() { return keeper; }
+	auto& GetWorker() { return worker; }
 	auto& GetPassManager() { return passMgr; }
 	auto& GetUnsavedState() { return unsavedState; }
 };

@@ -34,7 +34,7 @@ bool Game::OnInitialize()
 
 	gui.RegisterObject(&mainWnd);
 	mainWnd.Initialize();
-	keeper.Init();
+	worker.Init();
 	
 	//MORE LOGS!
 	//handle all errornous cases properly (so app doesn't deadlock)
@@ -55,7 +55,7 @@ Game game;
 
 bool Game::OnShutdown()
 {
-	keeper.Shutdown();
+	worker.Shutdown();
 	gui.Shutdown();
 	return true;
 }

@@ -7,6 +7,7 @@ add_executable(TheVault WIN32
 			Vault/Crypto.cpp
 			Vault/Vault.cpp
 			Vault/VaultKeeper.cpp
+			Vault/WorkerThread.cpp
 			GUI/GUIManager.cpp
 			GUI/MainWindow.cpp
 			GUI/Applets/ErrorApplet.cpp
@@ -15,10 +16,10 @@ add_executable(TheVault WIN32
 			GUI/Applets/MainApplet.cpp
 			GUI/Applets/ProcessApplet.cpp
 			GUI/Applets/WelcomeApplet.cpp
-			)
+)
 target_include_directories(TheVault PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(TheVault PRIVATE
 			GhostFries::Core
 			imgui::imgui
 			unofficial-sodium::sodium
-			)
+)
