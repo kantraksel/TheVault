@@ -1,7 +1,7 @@
 add_definitions(-DUNICODE -D_UNICODE)
 add_executable(TheVault WIN32
 			App/main.cpp
-			App/PassManager.cpp
+			App/ContentStore.cpp
 			Utils/StringUtils.cpp
 			Utils/WinApi.cpp
 			Vault/Crypto.cpp

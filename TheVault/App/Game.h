@@ -5,7 +5,7 @@
 #include "Vault/Vault.h"
 #include "Vault/VaultKeeper.h"
 #include "Vault/WorkerThread.h"
-#include "PassManager.h"
+#include "ContentStore.h"
 #include "UnsavedState.h"
 
 class Game : public IGame
@@ -16,7 +16,7 @@ private:
 	Vault vault;
 	VaultKeeper keeper;
 	WorkerThread worker;
-	PassManager passMgr;
+	ContentStore contentStore;
 	UnsavedState unsavedState;
 
 	bool OnClose();
@@ -32,6 +32,6 @@ public:
 	auto& GetVault() { return vault; }
 	auto& GetKeeper() { return keeper; }
 	auto& GetWorker() { return worker; }
-	auto& GetPassManager() { return passMgr; }
+	auto& GetContentStore() { return contentStore; }
 	auto& GetUnsavedState() { return unsavedState; }
 };

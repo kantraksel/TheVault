@@ -7,7 +7,7 @@
 #include "Vault/Crypto.h"
 #include "Game.h"
 
-Game::Game() : passMgr(unsavedState)
+Game::Game() : contentStore(unsavedState)
 {
 }
 

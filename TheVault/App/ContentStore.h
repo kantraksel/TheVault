@@ -3,7 +3,7 @@
 #include <string>
 #include "UnsavedState.h"
 
-class PassManager
+class ContentStore
 {
 private:
 	std::vector<std::pair<std::string, struct Pass>> mStore;
@@ -12,8 +12,8 @@ private:
 	bool CheckBounds(int i);
 
 public:
-	PassManager(UnsavedState& unsavedState);
-	~PassManager();
+	ContentStore(UnsavedState& unsavedState);
+	~ContentStore();
 	void Reset();
 
 	int GetCount();

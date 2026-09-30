@@ -82,7 +82,7 @@ void VaultKeeper::ResetState()
 	}
 
 	game.GetVault().Reset();
-	game.GetPassManager().Reset();
+	game.GetContentStore().Reset();
 	game.GetUnsavedState().ClearChange();
 	this->file = L"vault.bin";
 }
@@ -128,10 +128,10 @@ Future VaultKeeper::SubmitPassword(const SecureArray& password)
 			if (block)
 			{
 				Logger::Log("Deserializing content");
-				auto& passMgr = game.GetPassManager();
+				auto& store = game.GetContentStore();
 
 				auto size = strnlen_s(reinterpret_cast<const char*>(block.data()), block.size());
-				if (!passMgr.Deserialize(std::string_view(reinterpret_cast<const char*>(block.data()), size)))
+				if (!store.Deserialize(std::string_view(reinterpret_cast<const char*>(block.data()), size)))
 					return RaiseError("Failed to deserialize content", true);
 				Logger::Log("Opened vault");
 
@@ -227,7 +227,7 @@ Future VaultKeeper::SaveVault(bool close)
 				}
 
 				Logger::Log("Serializing content");
-				auto content = game.GetPassManager().Serialize();
+				auto content = game.GetContentStore().Serialize();
 				if (content.empty())
 					return RaiseError("Failed to serialize content");
 				if (content.size() > INT32_MAX)

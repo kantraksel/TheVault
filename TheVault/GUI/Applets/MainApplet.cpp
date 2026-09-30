@@ -130,8 +130,8 @@ void MainApplet::RenderMain()
 		ImGui::TableSetupColumn("Password");
 		ImGui::TableHeadersRow();
 
-		auto& passMgr = game.GetPassManager();
-		int hintCount = passMgr.GetCount();
+		auto& store = game.GetContentStore();
+		int hintCount = store.GetCount();
 		for (int i = 0; i < hintCount; ++i)
 		{
 			ImGui::PushID(i);
@@ -141,30 +141,30 @@ void MainApplet::RenderMain()
 			Text(StringUtils::ToStringNoAlloc(i + 1));
 
 			ImGui::TableNextColumn();
-			Text(passMgr.GetName(i));
+			Text(store.GetName(i));
 
 			ImGui::TableNextColumn();
-			if (passMgr.IsText(i))
+			if (store.IsText(i))
 			{
 				if (ImGui::Button("Show"))
 					OpenShowTextModal(i);
 				ImGui::SameLine();
 				if (ImGui::Button("Copy"))
 				{
-					WinApi::SetClipboardText(passMgr.GetText(i));
+					WinApi::SetClipboardText(store.GetText(i));
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Change"))
 					OpenChangeTextModal(i);
 			}
-			else if (passMgr.IsFile(i))
+			else if (store.IsFile(i))
 			{
 				if (ImGui::Button("Extract"))
 				{
-					wBuffer = StringUtils::Utf8ToWideString(passMgr.GetName(i));
+					wBuffer = StringUtils::Utf8ToWideString(store.GetName(i));
 					if (WinApi::SaveFileDialog(L"Extract file", wBuffer, wBuffer))
 					{
-						if (!passMgr.ExtractFile(i, wBuffer))
+						if (!store.ExtractFile(i, wBuffer))
 						{
 							OpenErrorModal("Failed to extract file - check permissions or logs for more details");
 						}
@@ -244,7 +244,7 @@ void MainApplet::RenderAddTextModal()
 		{
 			auto name = std::string_view(nameInput.data());
 			auto pwd = std::string_view(pwdInput.data());
-			game.GetPassManager().AddText(name, pwd);
+			game.GetContentStore().AddText(name, pwd);
 			memset(pwdInput.data(), 0, pwdInput.capacity());
 			nameInput.clear();
 			ImGui::CloseCurrentPopup();
@@ -285,7 +285,7 @@ void MainApplet::RenderAddFileModal()
 			if (!wBuffer.empty())
 			{
 				auto name = std::string_view(nameInput.data());
-				if (!game.GetPassManager().AddFile(name, wBuffer))
+				if (!game.GetContentStore().AddFile(name, wBuffer))
 				{
 					OpenErrorModal("Failed to read file - check permissions or logs for more details");
 				}
@@ -340,13 +340,13 @@ void MainApplet::RenderShowTextModal()
 
 	if (ImGui::BeginPopupModal("Password details", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		auto& passMgr = game.GetPassManager();
-		Text(passMgr.GetName(modalIdx));
-		Text(passMgr.GetText(modalIdx));
+		auto& store = game.GetContentStore();
+		Text(store.GetName(modalIdx));
+		Text(store.GetText(modalIdx));
 
 		if (ImGui::Button("Copy"))
 		{
-			WinApi::SetClipboardText(passMgr.GetText(modalIdx));
+			WinApi::SetClipboardText(store.GetText(modalIdx));
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Change"))
@@ -372,8 +372,8 @@ void MainApplet::RenderChangeTextModal()
 
 	if (ImGui::BeginPopupModal("Change password - TEXT", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		auto& passMgr = game.GetPassManager();
-		Text(passMgr.GetName(modalIdx));
+		auto& store = game.GetContentStore();
+		Text(store.GetName(modalIdx));
 
 		constexpr auto flags = ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
 		bool submit = ImGui::InputText("##Password", pwdInput.data(), pwdInput.capacity() - 1, flags);
@@ -382,7 +382,7 @@ void MainApplet::RenderChangeTextModal()
 		if (submit || submit2)
 		{
 			auto pwd = std::string_view(pwdInput.data());
-			passMgr.SetText(modalIdx, pwd);
+			store.SetText(modalIdx, pwd);
 			memset(pwdInput.data(), 0, pwdInput.capacity());
 			ImGui::CloseCurrentPopup();
 		}
@@ -415,12 +415,12 @@ void MainApplet::RenderChangeFileModal()
 	{
 		static std::wstring file;
 
-		auto& passMgr = game.GetPassManager();
-		Text(passMgr.GetName(modalIdx));
+		auto& store = game.GetContentStore();
+		Text(store.GetName(modalIdx));
 
 		if (ImGui::Button("Select file"))
 		{
-			wBuffer = StringUtils::Utf8ToWideString(passMgr.GetName(modalIdx));
+			wBuffer = StringUtils::Utf8ToWideString(store.GetName(modalIdx));
 			WinApi::OpenFileDialog(L"Replace file in vault", wBuffer, file);
 			wBuffer.clear();
 		}
@@ -430,7 +430,7 @@ void MainApplet::RenderChangeFileModal()
 		{
 			if (!file.empty())
 			{
-				if (!passMgr.SetFile(modalIdx, file))
+				if (!store.SetFile(modalIdx, file))
 				{
 					OpenErrorModal("Failed to read file - check permissions or logs for more details");
 				}
@@ -462,7 +462,7 @@ void MainApplet::RenderChangeNameModal()
 		openChangeNameModal = false;
 		ImGui::OpenPopup("Change password name");
 
-		nameInput = game.GetPassManager().GetName(modalIdx);
+		nameInput = game.GetContentStore().GetName(modalIdx);
 	}
 
 	if (ImGui::BeginPopupModal("Change password name", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
@@ -472,7 +472,7 @@ void MainApplet::RenderChangeNameModal()
 		if (ImGui::Button("Set"))
 		{
 			auto name = std::string_view(nameInput.data());
-			game.GetPassManager().SetName(modalIdx, name);
+			game.GetContentStore().SetName(modalIdx, name);
 			nameInput.clear();
 			ImGui::CloseCurrentPopup();
 		}
@@ -501,11 +501,11 @@ void MainApplet::RenderDeleteModal()
 		Text("Name: ");
 		ImGui::SameLine();
 
-		auto& passMgr = game.GetPassManager();
-		Text(passMgr.GetName(modalIdx));
+		auto& store = game.GetContentStore();
+		Text(store.GetName(modalIdx));
 		if (ImGui::Button("Yes"))
 		{
-			passMgr.Remove(modalIdx);
+			store.Remove(modalIdx);
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::SameLine();

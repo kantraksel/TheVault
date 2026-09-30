@@ -1,4 +1,4 @@
-#include "PassManager.h"
+#include "ContentStore.h"
 #include "Systems/YamlDoc.h"
 #include "Engine/Logger.h"
 #include "Files/FileStream.h"
@@ -18,45 +18,45 @@ struct Pass
 	SecureArray content;
 };
 
-PassManager::PassManager(UnsavedState& unsavedState) : unsavedState(unsavedState)
+ContentStore::ContentStore(UnsavedState& unsavedState) : unsavedState(unsavedState)
 {
 }
 
-PassManager::~PassManager()
+ContentStore::~ContentStore()
 {
 }
 
-void PassManager::Reset()
+void ContentStore::Reset()
 {
 	mStore.clear();
 }
 
-int PassManager::GetCount()
+int ContentStore::GetCount()
 {
 	return static_cast<int>(mStore.size());
 }
 
-bool PassManager::CheckBounds(int i)
+bool ContentStore::CheckBounds(int i)
 {
 	assert(i >= 0 && i < mStore.size() && "Store bound check failed");
 	return i >= 0 && i < mStore.size();
 }
 
-bool PassManager::IsText(int i)
+bool ContentStore::IsText(int i)
 {
 	if (!CheckBounds(i))
 		return false;
 	return mStore[i].second.type == PassType::Text;
 }
 
-bool PassManager::IsFile(int i)
+bool ContentStore::IsFile(int i)
 {
 	if (!CheckBounds(i))
 		return false;
 	return mStore[i].second.type == PassType::File;
 }
 
-int PassManager::Add(const std::string_view& name)
+int ContentStore::Add(const std::string_view& name)
 {
 	int i = static_cast<int>(mStore.size());
 
@@ -69,14 +69,14 @@ int PassManager::Add(const std::string_view& name)
 	return i;
 }
 
-std::string_view PassManager::GetName(int i)
+std::string_view ContentStore::GetName(int i)
 {
 	if (!CheckBounds(i))
 		return {};
 	return mStore[i].first;
 }
 
-std::string_view PassManager::GetText(int i)
+std::string_view ContentStore::GetText(int i)
 {
 	if (!CheckBounds(i))
 		return {};
@@ -99,7 +99,7 @@ static SecureArray CopyPassword(const std::string_view& password)
 	return buff;
 }
 
-void PassManager::Remove(int i)
+void ContentStore::Remove(int i)
 {
 	if (!CheckBounds(i))
 		return;
@@ -119,13 +119,13 @@ void PassManager::Remove(int i)
 	unsavedState.NotifyChange();
 }
 
-void PassManager::AddText(const std::string_view& name, const std::string_view& password)
+void ContentStore::AddText(const std::string_view& name, const std::string_view& password)
 {
 	int i = Add(name);
 	SetText(i, password);
 }
 
-void PassManager::SetText(int i, const std::string_view& password)
+void ContentStore::SetText(int i, const std::string_view& password)
 {
 	if (!CheckBounds(i))
 		return;
@@ -135,7 +135,7 @@ void PassManager::SetText(int i, const std::string_view& password)
 	unsavedState.NotifyChange();
 }
 
-void PassManager::SetName(int i, const std::string_view& name)
+void ContentStore::SetName(int i, const std::string_view& name)
 {
 	if (!CheckBounds(i))
 		return;
@@ -144,13 +144,13 @@ void PassManager::SetName(int i, const std::string_view& name)
 	unsavedState.NotifyChange();
 }
 
-bool PassManager::AddFile(const std::string_view& name, const std::wstring_view& file)
+bool ContentStore::AddFile(const std::string_view& name, const std::wstring_view& file)
 {
 	int i = Add(name);
 	return SetFile(i, file);
 }
 
-bool PassManager::SetFile(int i, const std::wstring_view& file)
+bool ContentStore::SetFile(int i, const std::wstring_view& file)
 {
 	if (!CheckBounds(i))
 		return false;
@@ -175,7 +175,7 @@ bool PassManager::SetFile(int i, const std::wstring_view& file)
 	return true;
 }
 
-bool PassManager::ExtractFile(int i, const std::wstring_view& file)
+bool ContentStore::ExtractFile(int i, const std::wstring_view& file)
 {
 	if (!CheckBounds(i))
 		return false;
@@ -203,7 +203,7 @@ bool PassManager::ExtractFile(int i, const std::wstring_view& file)
 	return true;
 }
 
-std::string PassManager::Serialize()
+std::string ContentStore::Serialize()
 {
 	YamlDoc doc;
 	doc["version"] = DocumentVersion;
@@ -252,7 +252,7 @@ std::string PassManager::Serialize()
 	return {};
 }
 
-bool PassManager::Deserialize(const std::string_view& data)
+bool ContentStore::Deserialize(const std::string_view& data)
 {
 	YamlDoc doc;
 	auto arr = FixedArrayChar::CreateRef(const_cast<char*>(data.data()), static_cast<unsigned int>(data.size()));
