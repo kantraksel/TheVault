@@ -1,6 +1,5 @@
 #pragma once
-#include "FileReader.h"
-#include "FileWriter.h"
+#include "FileStream.h"
 
 struct Container
 {
@@ -18,48 +17,48 @@ struct Container
 		Scene =			0x5353,
 	};
 
-	static bool Open(FileReader& reader, unsigned short type, unsigned short version, unsigned int& dataSize);
-	static bool Write(FileWriter& os, unsigned short type, unsigned short version, unsigned int dataSize);
+	static bool Open(FileStream& stream, unsigned short type, unsigned short version, unsigned int& dataSize);
+	static bool Write(FileStream& stream, unsigned short type, unsigned short version, unsigned int dataSize);
 
-	static bool BeginWrite(FileWriter& os, unsigned short type, unsigned short version);
-	static bool EndWrite(FileWriter& os, unsigned short type, unsigned short version);
+	static bool BeginWrite(FileStream& stream, unsigned short type, unsigned short version);
+	static bool EndWrite(FileStream& stream, unsigned short type, unsigned short version);
 
 	template<typename T>
-	static bool BeginWrite(FileWriter& os, unsigned short type, unsigned short version, const T& data)
+	static bool BeginWrite(FileStream& stream, unsigned short type, unsigned short version, const T& data)
 	{
-		return BeginWrite(os, type, version) && os.Write(&data, sizeof(data));
+		return BeginWrite(stream, type, version) && stream.Write(data);
 	}
 	template<typename T>
-	static bool EndWrite(FileWriter& os, unsigned short type, unsigned short version, const T& data)
+	static bool EndWrite(FileStream& stream, unsigned short type, unsigned short version, const T& data)
 	{
-		return EndWrite(os, type, version) && os.Write(&data, sizeof(data));
+		return EndWrite(stream, type, version) && stream.Write(data);
 	}
 
 	template<typename F, typename T>
-	static bool BeginWrite(FileWriter& os, const T& data)
+	static bool BeginWrite(FileStream& stream, const T& data)
 	{
-		return BeginWrite(os, F::Magic, F::Version) && os.Write(&data, sizeof(data));
+		return BeginWrite(stream, F::Magic, F::Version) && stream.Write(data);
 	}
 	template<typename F, typename T>
-	static bool EndWrite(FileWriter& os, const T& data)
+	static bool EndWrite(FileStream& stream, const T& data)
 	{
-		return EndWrite(os, F::Magic, F::Version) && os.Write(&data, sizeof(data));
+		return EndWrite(stream, F::Magic, F::Version) && stream.Write(data);
 	}
 	template<typename F>
-	static bool EndWrite(FileWriter& os)
+	static bool EndWrite(FileStream& stream)
 	{
-		return EndWrite(os, F::Magic, F::Version);
+		return EndWrite(stream, F::Magic, F::Version);
 	}
 
 	template<typename F, typename T>
-	static bool Open(FileReader& reader, unsigned int& dataSize)
+	static bool Open(FileStream& stream, unsigned int& dataSize)
 	{
-		return Open(reader, F::Magic, F::Version, dataSize);
+		return Open(stream, F::Magic, F::Version, dataSize);
 	}
 	template<typename F, typename T>
-	static bool Open(FileReader& reader, T& data, unsigned int& dataSize)
+	static bool Open(FileStream& stream, T& data, unsigned int& dataSize)
 	{
-		if (!Open(reader, F::Magic, F::Version, dataSize) || dataSize < sizeof(data) || !reader.Read(data))
+		if (!Open(stream, F::Magic, F::Version, dataSize) || dataSize < sizeof(data) || !stream.Read(data))
 			return false;
 
 		dataSize -= sizeof(data);
@@ -67,8 +66,8 @@ struct Container
 	}
 
 	template<typename F>
-	static bool Write(FileWriter& os, unsigned int dataSize)
+	static bool Write(FileStream& stream, unsigned int dataSize)
 	{
-		return Write(os, F::Magic, F::Version, dataSize);
+		return Write(stream, F::Magic, F::Version, dataSize);
 	}
 };

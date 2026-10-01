@@ -15,7 +15,6 @@ add_library(GhostFriesCore STATIC
 
 			src/Systems/GraphicsEngine.cpp
 			src/Systems/WindowManager.cpp
-			src/Systems/FileSystem.cpp
 			src/Systems/AppData.cpp
 			src/Systems/Configurations.cpp
 			src/Systems/YamlDoc.cpp
@@ -23,9 +22,6 @@ add_library(GhostFriesCore STATIC
 
 			src/Files/FileStream.cpp
 			src/Files/MemoryStream.cpp
-			src/Files/DirectStream.cpp
-			src/Files/FileReader.cpp
-			src/Files/FileWriter.cpp
 			src/Files/Container.cpp
 
 			src/Utility/StringUtils.cpp

@@ -13,10 +13,10 @@ struct Header
 	unsigned int dataSize;
 };
 
-bool Container::Open(FileReader& reader, unsigned short type, unsigned short version, unsigned int& dataSize)
+bool Container::Open(FileStream& stream, unsigned short type, unsigned short version, unsigned int& dataSize)
 {
 	Header header;
-	if (reader.Read(header))
+	if (stream.Read(header))
 	{
 		if (header.magic != Magic)
 		{
@@ -43,21 +43,21 @@ bool Container::Open(FileReader& reader, unsigned short type, unsigned short ver
 	return false;
 }
 
-bool Container::Write(FileWriter& os, unsigned short type, unsigned short version, unsigned int dataSize)
+bool Container::Write(FileStream& stream, unsigned short type, unsigned short version, unsigned int dataSize)
 {
 	Header header{ Magic, type, version, 0, dataSize };
-	return os.Write(header);
+	return stream.Write(header);
 }
 
-bool Container::BeginWrite(FileWriter& os, unsigned short type, unsigned short version)
+bool Container::BeginWrite(FileStream& stream, unsigned short type, unsigned short version)
 {
 	Header header{ Magic, type, version, 0, 0 };
-	return os.Write(header);
+	return stream.Write(header);
 }
 
-bool Container::EndWrite(FileWriter& os, unsigned short type, unsigned short version)
+bool Container::EndWrite(FileStream& stream, unsigned short type, unsigned short version)
 {
-	auto size = std::min(os.Length() - sizeof(Header), 0xFFFFFFFFull);
-	Header header{ Magic, type, version, 0, (unsigned int)size };
-	return os.Seek(0) && os.Write(header);
+	auto size = std::min(stream.Length() - sizeof(Header), static_cast<uint64_t>(UINT32_MAX));
+	Header header{ Magic, type, version, 0, static_cast<unsigned int>(size) };
+	return stream.Seek(0) && stream.Write(header);
 }

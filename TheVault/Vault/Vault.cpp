@@ -28,8 +28,8 @@ void Vault::Reset()
 
 bool Vault::Open(const std::wstring_view& file)
 {
-	FileReader stream;
-	if (!stream.Open(file))
+	FileStream stream;
+	if (!stream.OpenRead(file))
 		return false;
 	
 	VaultHeader header;
@@ -94,8 +94,8 @@ bool Vault::Place(const std::wstring_view& file)
 			return false;
 	}
 
-	FileWriter stream;
-	if (!stream.Open(file))
+	FileStream stream;
+	if (!stream.OpenWrite(file))
 		return false;
 
 	VaultHeader header{};

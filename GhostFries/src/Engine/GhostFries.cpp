@@ -4,7 +4,6 @@
 #include "Systems/WindowManager.h"
 #include "Systems/Configurations.h"
 #include "Systems/GraphicsEngine.h"
-#include "Systems/FileSystem.h"
 #include "Systems/AppData.h"
 #include "Engine/Logger.h"
 #include "Systems/YamlDoc.h"
@@ -26,7 +25,6 @@ struct GhostFriesImpl
 
 	WindowManager mWindowManager;
 	GraphicsEngine mRenderEngine;
-	FileSystem mFileSystem;
 	Configurations mConfigurations;
 	YamlDoc mConfig;
 };
@@ -110,8 +108,6 @@ bool GhostFriesImpl::Initialize()
 {
 	LoadConfigs();
 
-	if (!mFileSystem.Initialize(mConfig) || !mFileSystem.SetGlobal())
-		return false;
 	if (!mWindowManager.Initialize())
 		return false;
 	if (!mRenderEngine.Initialize(mWindowManager.GetWindow()))
@@ -158,7 +154,6 @@ bool GhostFriesImpl::Shutdown()
 
 	mRenderEngine.Shutdown();
 	mWindowManager.Shutdown();
-	mFileSystem.Shutdown();
 	return true;
 }
 
