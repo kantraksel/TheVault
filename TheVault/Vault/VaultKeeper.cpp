@@ -131,7 +131,7 @@ Future VaultKeeper::SubmitPassword(const SecureArray& password)
 				auto& store = game.GetContentStore();
 
 				auto size = strnlen_s(reinterpret_cast<const char*>(block.data()), block.size());
-				if (!store.Deserialize(std::string_view(reinterpret_cast<const char*>(block.data()), size)))
+				if (!store.Deserialize(block.span(0, size)))
 					return RaiseError("Failed to deserialize content", true);
 				Logger::Log("Opened vault");
 
@@ -254,7 +254,7 @@ Future VaultKeeper::SaveVault(bool close)
 				auto& block = vault.GetBlock();
 				block = SecureArray(content.size() + (1024 - content.size() % 1024) % 1024);
 				Crypto::ZeroMemory(block);
-				block.copyFrom(SecureArray::CreateRef(content.data(), content.size()));
+				block.copyFrom(content);
 
 				if (!vault.Place(file))
 				{

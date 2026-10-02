@@ -9,6 +9,7 @@ struct YamlDoc
 	std::wstring mFile;
 
 	YamlDoc();
+	YamlDoc(const ryml::Callbacks& callbacks);
 	~YamlDoc();
 
 	bool Load(const std::wstring_view& file);
@@ -21,6 +22,7 @@ struct YamlDoc
 	YamlNode operator[](const std::string_view& str);
 
 	bool Serialize(std::string& content);
+	FixedArrayChar Serialize(FixedArrayChar& content);
 	bool Deserialize(const std::string_view& content);
 
 private:

@@ -21,5 +21,5 @@ namespace Crypto
 	bool OpenChestInPlace(SecureArray& chest, const SecureArray& key, const SecureArray& nonce);
 
 	SecureArray Base64ToBuffer(const std::string_view& text);
-	bool BufferToBase64(const SecureArray& buffer, std::string& text);
+	std::string_view BufferToBase64(const SecureArray& buffer, SecureArray& text);
 };

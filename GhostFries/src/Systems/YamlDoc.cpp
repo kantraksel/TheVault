@@ -59,6 +59,11 @@ YamlDoc::YamlDoc() : mTree(RymlGlobalCallbacks::GetCallbacks())
 	ValidateTreeRoot(mTree);
 }
 
+YamlDoc::YamlDoc(const ryml::Callbacks& callbacks) : mTree(callbacks)
+{
+	ValidateTreeRoot(mTree);
+}
+
 YamlDoc::~YamlDoc()
 {
 }
@@ -170,8 +175,22 @@ bool YamlDoc::Serialize(std::string& content)
 	}
 	catch (const std::runtime_error& e)
 	{
-		Logger::LogError("YamlDoc: could not serialize doc: {}", e.what());
+		Logger::LogError("Failed to serialize YamlDoc: {}", e.what());
 		return false;
+	}
+}
+
+FixedArrayChar YamlDoc::Serialize(FixedArrayChar& content)
+{
+	try
+	{
+		auto result = ryml::emit_yaml(mTree, mTree.root_id_maybe(), ryml::substr(content.data(), content.size()), false);
+		return FixedArrayChar::CreateRef(result.data(), result.size());
+	}
+	catch (const std::runtime_error& e)
+	{
+		Logger::LogError("Failed to serialize YamlDoc: {}", e.what());
+		return nullptr;
 	}
 }
 

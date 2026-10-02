@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "UnsavedState.h"
+#include "Utils/SecureArray.h"
 
 class ContentStore
 {
@@ -34,6 +35,6 @@ public:
 	bool SetFile(int i, const std::wstring_view& file);
 	bool ExtractFile(int i, const std::wstring_view& file);
 
-	std::string Serialize();
-	bool Deserialize(const std::string_view& data);
+	SecureArray Serialize();
+	bool Deserialize(const SecureArray& data);
 };

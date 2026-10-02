@@ -82,14 +82,13 @@ SecureArray Crypto::Base64ToBuffer(const std::string_view& text)
 	return nullptr;
 }
 
-bool Crypto::BufferToBase64(const SecureArray& buffer, std::string& text)
+std::string_view Crypto::BufferToBase64(const SecureArray& buffer, SecureArray& text)
 {
-	text.resize(sodium_base64_encoded_len(buffer.size(), sodium_base64_VARIANT_URLSAFE));
-	if (sodium_bin2base64(text.data(), text.size(), buffer.data(), buffer.size(), sodium_base64_VARIANT_URLSAFE))
+	text = SecureArray(sodium_base64_encoded_len(buffer.size(), sodium_base64_VARIANT_URLSAFE));
+	if (sodium_bin2base64(reinterpret_cast<char*>(text.data()), text.size(), buffer.data(), buffer.size(), sodium_base64_VARIANT_URLSAFE))
 	{
-		text.resize(text.size() - 1);
-		return true;
+		return { reinterpret_cast<char*>(text.data()), text.size() - 1 };
 	}
-	text.clear();
-	return false;
+	text = nullptr;
+	return {};
 }

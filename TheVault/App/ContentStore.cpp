@@ -203,13 +203,51 @@ bool ContentStore::ExtractFile(int i, const std::wstring_view& file)
 	return true;
 }
 
-std::string ContentStore::Serialize()
+struct RymlSecureAllocator
 {
-	YamlDoc doc;
+	static auto Get()
+	{
+		ryml::Callbacks callbacks{};
+		callbacks.m_allocate = alloc;
+		callbacks.m_free = dealloc;
+		callbacks.m_error_basic = error;
+		callbacks.m_error_parse = error;
+		callbacks.m_error_visit = error;
+		return callbacks;
+	}
+
+	static void* alloc(size_t len, void*, void*)
+	{
+		return sodium_malloc(len);
+	}
+
+	static void dealloc(void* mem, size_t, void*)
+	{
+		sodium_free(mem);
+	}
+
+	static void error(ryml::csubstr msg, ryml::ErrorDataBasic const& errdata, void*)
+	{
+		throw std::runtime_error(std::string(msg.data(), msg.size()));
+	}
+
+	static void error(ryml::csubstr msg, ryml::ErrorDataParse const& errdata, void*)
+	{
+		throw std::runtime_error(std::string(msg.data(), msg.size()));
+	}
+
+	static void error(ryml::csubstr msg, ryml::ErrorDataVisit const& errdata, void*)
+	{
+		throw std::runtime_error(std::string(msg.data(), msg.size()));
+	}
+};
+
+SecureArray ContentStore::Serialize()
+{
+	YamlDoc doc(RymlSecureAllocator::Get());
 	doc["version"] = DocumentVersion;
 	auto node = doc["password"].SetMap();
 
-	std::string fileBuffer;
 	for (auto& [name, pass] : mStore)
 	{
 		if (pass.type == PassType::Text)
@@ -224,7 +262,9 @@ std::string ContentStore::Serialize()
 		}
 		else if (pass.type == PassType::File)
 		{
-			if (!Crypto::BufferToBase64(pass.content, fileBuffer))
+			SecureArray buffer;
+			auto content = Crypto::BufferToBase64(pass.content, buffer);
+			if (content.empty())
 			{
 				Logger::LogError("Could not convert buffer to base64");
 				return {};
@@ -232,7 +272,7 @@ std::string ContentStore::Serialize()
 
 			auto child = node[name].SetMap();
 			child["type"] = "Data";
-			child["content"] = fileBuffer;
+			child["content"] = content;
 		}
 		else
 		{
@@ -241,21 +281,33 @@ std::string ContentStore::Serialize()
 		}
 	}
 
-	try
+	auto buffer = SecureArray(1048576);
+	auto bufferView = FixedArrayChar::CreateRef(buffer.data(), buffer.size());
+	auto view = doc.Serialize(bufferView);
+	if (view.empty())
+		return nullptr;
+	if (!view.data())
 	{
-		return ryml::emitrs_yaml<std::string>(doc.mTree);
+		buffer = SecureArray(view.size());
+		bufferView = FixedArrayChar::CreateRef(buffer.data(), buffer.size());
+		view = doc.Serialize(bufferView);
+		if (view.empty() || !view.data())
+			return {};
 	}
-	catch (const std::runtime_error& e)
+
+	if (buffer.size() != view.size())
 	{
-		Logger::LogError("Could not serialize YamlDoc: {}", e.what());
+		auto result = SecureArray(view.size());
+		result.copyFrom(buffer.span(0, view.size()));
+		buffer = std::move(result);
 	}
-	return {};
+	return buffer;
 }
 
-bool ContentStore::Deserialize(const std::string_view& data)
+bool ContentStore::Deserialize(const SecureArray& data)
 {
-	YamlDoc doc;
-	auto arr = FixedArrayChar::CreateRef(const_cast<char*>(data.data()), static_cast<unsigned int>(data.size()));
+	YamlDoc doc(RymlSecureAllocator::Get());
+	auto arr = FixedArrayChar::CreateRef(const_cast<uint8_t*>(data.data()), static_cast<unsigned int>(data.size()));
 	if (!doc.Load(arr, L"internal"))
 	{
 		Logger::LogError("Failed to read YamlDoc: invalid content");
