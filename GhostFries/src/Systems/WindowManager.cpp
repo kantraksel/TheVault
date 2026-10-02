@@ -47,6 +47,14 @@ void WindowManager::Shutdown()
 	Logger::Log("Destroyed main window");
 }
 
+void WindowManager::SetVisibility(bool value)
+{
+	if (!mWnd)
+		return;
+	ShowWindow(mWnd, SW_SHOW);
+	UpdateWindow(mWnd);
+}
+
 void WindowManager::Resize(unsigned short width, unsigned short height)
 {
 	if (!mWnd)
@@ -104,9 +112,6 @@ bool WindowManager::InitWnd(HINSTANCE hInst)
 
 	BOOL value = TRUE;
 	DwmSetWindowAttribute(mWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
-
-	ShowWindow(mWnd, SW_SHOW);
-	UpdateWindow(mWnd);
 
 	return true;
 }

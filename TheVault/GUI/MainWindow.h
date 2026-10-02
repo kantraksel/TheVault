@@ -34,6 +34,7 @@ private:
 	ErrorApplet error;
 	
 	bool openConfirmExitModal;
+	bool closeAppOnConfirmExit;
 	void RenderConfirmExitModal();
 
 	void SwitchApplet(RenderContent content, IApplet* applet);
@@ -56,7 +57,7 @@ public:
 	void SwitchToLockSetup();
 
 	void ShowError(const std::string_view& text, bool critical);
-	void OpenConfirmExitModal();
+	void OpenConfirmExitModal(bool closeApp = false);
 
 	void ProcessVaultTask(std::future<uint64_t>&& task, const std::string_view& title = {});
 	uint64_t ProcessVaultResponse(std::future<uint64_t>& task);
@@ -73,5 +74,6 @@ public:
 		TR_FetchNextHint,
 		TR_CriticalError,
 		TR_CloseVault,
+		TR_CloseApp,
 	};
 };

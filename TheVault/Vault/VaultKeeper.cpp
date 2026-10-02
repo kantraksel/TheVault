@@ -21,7 +21,7 @@ VaultKeeper::~VaultKeeper()
 
 Future VaultKeeper::OpenVault(const std::wstring& file)
 {
-	return game.GetWorker().SendCmd([=, this]
+	return game.GetWorker().SendCmd([=, this]() -> uint64_t
 		{
 			auto& vault = game.GetVault();
 			ResetState();
@@ -32,6 +32,22 @@ Future VaultKeeper::OpenVault(const std::wstring& file)
 				return TaskRet::TR_SwitchToWelcome;
 			}
 			Logger::Log(L"Opened vault {}", file);
+
+			auto& block = vault.GetBlock();
+			if (block)
+			{
+				Logger::Log("Deserializing content");
+				auto& store = game.GetContentStore();
+
+				auto size = strnlen_s(reinterpret_cast<const char*>(block.data()), block.size());
+				if (!store.Deserialize(block.span(0, size)))
+					return RaiseError("Failed to deserialize content", true);
+				Logger::Log("Opened vault");
+
+				vault.Reset();
+				game.GetUnsavedState().ClearChange();
+				return TaskRet::TR_SwitchToMainView;
+			}
 
 			this->file = file;
 			{
@@ -55,6 +71,7 @@ Future VaultKeeper::CreateVault(const std::wstring& file)
 
 			ResetState();
 			this->file = file;
+			SaveVault(false, true);
 
 			Logger::Log(L"Prepared new vault at {}", file);
 			game.GetUnsavedState().NotifyChange();
@@ -62,15 +79,15 @@ Future VaultKeeper::CreateVault(const std::wstring& file)
 		});
 }
 
-Future VaultKeeper::CloseVault()
+Future VaultKeeper::CloseVault(bool closeApp)
 {
-	return game.GetWorker().SendCmd([this]
+	return game.GetWorker().SendCmd([=, this]
 		{
 			//if changed, save
 
 			ResetState();
 			Logger::Log("Closed vault");
-			return TaskRet::TR_SwitchToWelcome;
+			return closeApp ? TaskRet::TR_CloseApp : TaskRet::TR_SwitchToWelcome;
 		});
 }
 
@@ -208,30 +225,42 @@ Future VaultKeeper::SetHintKey(int i, const SecureArray& password)
 		}, password);
 }
 
-Future VaultKeeper::SaveVault(bool close)
+Future VaultKeeper::SaveVault(bool close, bool ignoreChecks, bool closeApp)
 {
 	return game.GetWorker().SendCmd([=, this]() -> uint64_t
 			{
-				//these checks should be in window
-				std::lock_guard lock(chainMutex);
-				if (mChain.empty())
-					return RaiseError("Vault must be encrypted with at least one hint");
-
-				for (auto& key : mChain)
+				if (!ignoreChecks)
 				{
-					if (!key.key || !key.salt)
+					//these checks should be in window
+					std::lock_guard lock(chainMutex);
+					if (mChain.empty())
 					{
-						RaiseError("All hint keys must be set");
+						RaiseError("Vault must be encrypted with at least one hint");
 						return TaskRet::TR_SwitchToLockSetup;
+					}
+
+					for (auto& key : mChain)
+					{
+						if (!key.key || !key.salt)
+						{
+							RaiseError("All hint keys must be set");
+							return TaskRet::TR_SwitchToLockSetup;
+						}
 					}
 				}
 
 				Logger::Log("Serializing content");
 				auto content = game.GetContentStore().Serialize();
 				if (content.empty())
-					return RaiseError("Failed to serialize content");
+				{
+					RaiseError("Failed to serialize content");
+					return TaskRet::TR_SwitchToLockSetup;
+				}
 				if (content.size() > INT32_MAX)
-					return RaiseError("Failed to save vault - too much data (max 2GB)");
+				{
+					RaiseError("Failed to save vault - too much data (max 2GB)");
+					return TaskRet::TR_SwitchToLockSetup;
+				}
 
 				Logger::Log("Placing vault");
 
@@ -268,7 +297,7 @@ Future VaultKeeper::SaveVault(bool close)
 				vault.Reset();
 				game.GetUnsavedState().ClearChange();
 				if (close)
-					return TaskRet::TR_CloseVault;
+					CloseVault(closeApp);
 				return TaskRet::TR_SwitchToMainView;
 			});
 }

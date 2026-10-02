@@ -34,6 +34,7 @@ public:
 	void Update();
 	void Shutdown();
 
+	void SetVisibility(bool value);
 	void Resize(unsigned short width, unsigned short height);
 	void Close();
 

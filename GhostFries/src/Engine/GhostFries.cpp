@@ -121,6 +121,7 @@ bool GhostFriesImpl::Initialize()
 		Logger::LogWarn("Game failed to intialize, shutting down");
 		return false;
 	}
+	mWindowManager.SetVisibility(true);
 	return true;
 }
 

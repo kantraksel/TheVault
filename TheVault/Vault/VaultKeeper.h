@@ -30,8 +30,8 @@ public:
 
 	Future OpenVault(const std::wstring& file);
 	Future CreateVault(const std::wstring& file);
-	Future CloseVault();
-	Future SaveVault(bool close = false);
+	Future CloseVault(bool closeApp = false);
+	Future SaveVault(bool close = false, bool ignoreChecks = false, bool closeApp = false);
 
 	void GetLastHint(std::string& str);
 	Future SubmitPassword(const SecureArray& password);

@@ -3,12 +3,14 @@
 #include "MainWindow.h"
 #include "Engine/Logger.h"
 #include "App/Game.h"
+#include "Engine/GhostFries.h"
 
 extern Game game;
 
 MainWindow::MainWindow()
 {
 	openConfirmExitModal = false;
+	closeAppOnConfirmExit = false;
 
 	content = RenderContent::Welcome;
 	applet = nullptr;
@@ -196,13 +198,19 @@ uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
 			ProcessVaultTask(game.GetKeeper().CloseVault(), "Closing vault...");
 			break;
 		}
+		case TR_CloseApp:
+		{
+			GhostFries::Quit();
+			break;
+		}
 	}
 	return value;
 }
 
-void MainWindow::OpenConfirmExitModal()
+void MainWindow::OpenConfirmExitModal(bool closeApp)
 {
 	openConfirmExitModal = true;
+	closeAppOnConfirmExit = closeApp;
 }
 
 void MainWindow::RenderConfirmExitModal()
@@ -220,17 +228,22 @@ void MainWindow::RenderConfirmExitModal()
 		if (ImGui::Button("Yes"))
 		{
 			ImGui::CloseCurrentPopup();
-			ProcessVaultTask(game.GetKeeper().SaveVault(true), "Saving vault...");
+			ProcessVaultTask(game.GetKeeper().SaveVault(true, false, closeAppOnConfirmExit), "Saving vault...");
+			closeAppOnConfirmExit = false;
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("No"))
 		{
 			ImGui::CloseCurrentPopup();
-			ProcessVaultTask(game.GetKeeper().CloseVault(), "Closing vault...");
+			ProcessVaultTask(game.GetKeeper().CloseVault(closeAppOnConfirmExit), "Closing vault...");
+			closeAppOnConfirmExit = false;
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel"))
+		{
 			ImGui::CloseCurrentPopup();
+			closeAppOnConfirmExit = false;
+		}
 
 		ImGui::EndPopup();
 	}
