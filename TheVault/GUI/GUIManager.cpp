@@ -1,6 +1,8 @@
-#include <d3d11.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <vulkan/vulkan_raii.hpp>
 #include <imgui_impl_win32.h>
-#include <imgui_impl_dx11.h>
+#include <imgui_impl_vulkan.h>
 #include "GUIManager.h"
 #include "Engine/Logger.h"
 #define GF_INCLUDE_WNDMGR
@@ -61,12 +63,28 @@ bool GUIManager::InitImguiBackends()
 	if (!io.BackendRendererUserData)
 	{
 		auto& ctx = GhostFries::GetRenderEngine();
-		auto* pContext = ctx.GetContext();
-		ID3D11Device* pDevice;
-		pContext->GetDevice(&pDevice);
 
-		bool result = ImGui_ImplDX11_Init(pDevice, pContext);
-		pDevice->Release();
+		ImGui_ImplVulkan_InitInfo info
+		{
+			.Instance = ctx.GetInstance(),
+			.PhysicalDevice = ctx.GetPhysicalDevice(),
+			.Device = ctx.GetLogicalDevice(),
+			.QueueFamily = ,
+			.Queue = ctx.GetQueue(),
+			.DescriptorPool = ,
+			.MinImageCount = ,
+			.ImageCount = ,
+			.PipelineCache = ,
+			.PipelineInfoMain =
+				{
+					.RenderPass = ,
+					.Subpass = 0,
+					.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+				},
+			.Allocator = ,
+			.CheckVkResultFn = ,
+		};
+		bool result = ImGui_ImplVulkan_Init(&info);
 		if (!result)
 			return false;
 	}
@@ -107,14 +125,14 @@ void GUIManager::Shutdown()
 
 	auto& io = ImGui::GetIO();
 	if (io.BackendRendererUserData)
-		ImGui_ImplDX11_Shutdown();
+		ImGui_ImplVulkan_Shutdown();
 	if (io.BackendPlatformUserData)
 		ImGui_ImplWin32_Shutdown();
 }
 
 void GUIManager::Render()
 {
-	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
@@ -124,7 +142,7 @@ void GUIManager::Render()
 	}
 	
 	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData());
 }
 
 void GUIManager::RegisterObject(IRender* obj)
