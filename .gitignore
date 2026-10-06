@@ -2,3 +2,5 @@
 Binary/
 Intermediate/
 Runtime/
+.idea/
+CMakeUserPresets.json
