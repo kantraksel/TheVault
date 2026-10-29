@@ -131,6 +131,7 @@ void ContentStore::SetText(int i, const std::string_view& password)
 		return;
 
 	auto& pass = mStore[i].second;
+	pass.type = PassType::Text;
 	pass.content = CopyPassword(password);
 	unsavedState.NotifyChange();
 }
@@ -170,6 +171,7 @@ bool ContentStore::SetFile(int i, const std::wstring_view& file)
 	}
 
 	auto& pass = mStore[i].second;
+	pass.type = PassType::File;
 	pass.content = std::move(buffer);
 	unsavedState.NotifyChange();
 	return true;
@@ -256,9 +258,9 @@ SecureArray ContentStore::Serialize()
 			child["type"] = "Text";
 
 			if (pass.content.empty())
-				child["content"] = "";
+				child["value"] = "";
 			else
-				child["content"] = std::string_view(reinterpret_cast<char*>(pass.content.data()), pass.content.size() - 1);
+				child["value"] = std::string_view(reinterpret_cast<char*>(pass.content.data()), pass.content.size() - 1);
 		}
 		else if (pass.type == PassType::File)
 		{
@@ -272,7 +274,7 @@ SecureArray ContentStore::Serialize()
 
 			auto child = node[name].SetMap();
 			child["type"] = "Data";
-			child["content"] = content;
+			child["value"] = content;
 		}
 		else
 		{

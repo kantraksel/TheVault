@@ -1,6 +1,6 @@
 ![GitHub License](https://img.shields.io/github/license/kantraksel/TheVault?style=for-the-badge)
 ![GitHub Release](https://img.shields.io/github/v/release/kantraksel/TheVault?style=for-the-badge)
-![GitHub branch status](https://img.shields.io/github/checks-status/kantraksel/TheVault/master?style=for-the-badge&label=Build)
+![GitHub branch status](https://img.shields.io/github/check-runs/kantraksel/TheVault/master?nameFilter=build&style=for-the-badge&label=Build)
 
 # Overview
 TheVault is a secure data container, primarily designed for passwords. Think about this like a container for root passwords and keys - intended for long-term storage with infrequent access.
@@ -10,9 +10,9 @@ The topic is described in separate document [Security and Whatnot](SECURITY_AND_
 
 ## How To Build
 ### Prerequisities
-- vcpkg (newer than 2026-06-24 - see baseline in vcpkg.json)
+- vcpkg (2026-10-06 - see baseline in vcpkg.json)
 - CMake 3.21 or later
-- MSVC with Toolchain v145
+- MSVC with Build Tools v145
 
 ### Build Steps
 Instructions are assumed to be executed in Command Prompt (cmd.exe)
