@@ -36,7 +36,13 @@ bool Game::OnInitialize()
 	mainWnd.Initialize();
 	worker.Init();
 
+	//focus inputs
+	//file menu
+	//add password copy notification
+	//center labels in tables and near buttons
+	//
 	//UX redesign (+keyboard-only accessibility, welcome screen tooltip)
+	//delete corrupted vault/restore from backup when saving fails
 	//move to Vulkan
 	//*support Linux
 	//reset password in clipboard after 1 min

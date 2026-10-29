@@ -4,13 +4,11 @@
 #include "MainApplet.h"
 #include "App/Game.h"
 #include "Utils/WinApi.h"
-#include "Utils/StringUtils.h"
 
 extern Game game;
 
 MainApplet::MainApplet()
 {
-	openSelectAddModal = false;
 	openAddTextModal = false;
 	openAddFileModal = false;
 	openShowTextBlockedModal = false;
@@ -19,6 +17,7 @@ MainApplet::MainApplet()
 	openChangeFileModal = false;
 	openChangeNameModal = false;
 	openDeleteModal = false;
+	openErrorModal = false;
 	modalIdx = 0;
 
 	pwdInput.reserve(256);
@@ -33,7 +32,6 @@ MainApplet::~MainApplet()
 void MainApplet::Render()
 {
 	RenderMain();
-	RenderSelectAddModal();
 	RenderAddTextModal();
 	RenderAddFileModal();
 	RenderShowTextBlockModal();
@@ -43,11 +41,6 @@ void MainApplet::Render()
 	RenderChangeNameModal();
 	RenderDeleteModal();
 	RenderErrorModal();
-}
-
-void MainApplet::OpenSelectAddModal()
-{
-	openSelectAddModal = true;
 }
 
 void MainApplet::OpenAddTextModal()
@@ -104,8 +97,6 @@ void MainApplet::OpenErrorModal(const std::string_view& msg)
 
 void MainApplet::RenderMain()
 {
-	BeginVisibleChildWindow("##MainApplet", ImVec2(617, 200), ImGuiChildFlags_Borders, ImGuiWindowFlags_MenuBar);
-
 	if (ImGui::BeginMenuBar())
 	{
 		if (ImGui::MenuItem("Settings"))
@@ -123,11 +114,10 @@ void MainApplet::RenderMain()
 	}
 
 	constexpr auto flags = ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit;
-	if (ImGui::BeginTable("MainContent", 3, flags, ImVec2(600, 100), ImGuiTableFlags_ScrollY))
+	if (ImGui::BeginTable("MainContent", 2, flags, ImVec2(0, 0), ImGuiTableFlags_ScrollY))
 	{
-		ImGui::TableSetupColumn("No.");
 		ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
-		ImGui::TableSetupColumn("Password");
+		ImGui::TableSetupColumn("Actions");
 		ImGui::TableHeadersRow();
 
 		auto& store = game.GetContentStore();
@@ -136,9 +126,6 @@ void MainApplet::RenderMain()
 		{
 			ImGui::PushID(i);
 			ImGui::TableNextRow();
-
-			ImGui::TableNextColumn();
-			Text(StringUtils::ToStringNoAlloc(i + 1));
 
 			ImGui::TableNextColumn();
 			Text(store.GetName(i));
@@ -159,7 +146,15 @@ void MainApplet::RenderMain()
 			}
 			else if (store.IsFile(i))
 			{
-				if (ImGui::Button("Extract"))
+				auto& style = ImGui::GetStyle();
+
+				auto textSize = ImGui::CalcTextSize("Show", nullptr, true);
+				float width = textSize.x + style.FramePadding.x * 2.0f;
+				textSize = ImGui::CalcTextSize("Copy", nullptr, true);
+				width += textSize.x + style.FramePadding.x * 2.0f;
+				width += style.ItemSpacing.x;
+
+				if (ImGui::Button("Extract", ImVec2(width, 0)))
 				{
 					wBuffer = StringUtils::Utf8ToWideString(store.GetName(i));
 					if (WinApi::SaveFileDialog(L"Extract file", wBuffer, wBuffer))
@@ -172,7 +167,7 @@ void MainApplet::RenderMain()
 					wBuffer.clear();
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Update"))
+				if (ImGui::Button("Change"))
 					OpenChangeFileModal(i);
 			}
 
@@ -185,43 +180,24 @@ void MainApplet::RenderMain()
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
+		if (ImGui::Button("Add Password"))
+			OpenAddTextModal();
+		ImGui::SameLine();
+		if (ImGui::Button("Add File"))
+			OpenAddFileModal();
+
 		ImGui::TableNextColumn();
-		if (ImGui::Button("Add new password"))
-			OpenSelectAddModal();
-		ImGui::TableNextColumn();
+		ImGui::BeginDisabled();
+		ImGui::Button("Show");
+		ImGui::SameLine();
+		ImGui::Button("Copy");
+		ImGui::SameLine();
+		ImGui::Button("Change");
+		ImGui::SameLine();
+		ImGui::Button("Delete");
+		ImGui::EndDisabled();
 
 		ImGui::EndTable();
-	}
-	ImGui::EndChild();
-}
-
-void MainApplet::RenderSelectAddModal()
-{
-	if (openSelectAddModal)
-	{
-		openSelectAddModal = false;
-		ImGui::OpenPopup("Add password - select type");
-	}
-
-	if (ImGui::BeginPopupModal("Add password - select type", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		Text("Select password type");
-		if (ImGui::Button("Text"))
-		{
-			ImGui::CloseCurrentPopup();
-			OpenAddTextModal();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("File"))
-		{
-			ImGui::CloseCurrentPopup();
-			OpenAddFileModal();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel"))
-			ImGui::CloseCurrentPopup();
-
-		ImGui::EndPopup();
 	}
 }
 
@@ -230,15 +206,21 @@ void MainApplet::RenderAddTextModal()
 	if (openAddTextModal)
 	{
 		openAddTextModal = false;
-		ImGui::OpenPopup("Add password - TEXT");
+		ImGui::OpenPopup("Add Password");
 	}
 
-	if (ImGui::BeginPopupModal("Add password - TEXT", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Add Password", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
+		Text("Name:");
+		ImGui::SameLine();
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 		ImGui::InputText("##Name", nameInput.data(), nameInput.capacity() - 1, ImGuiInputTextFlags_NoUndoRedo);
+
+		Text("Value:");
+		ImGui::SameLine();
 		constexpr auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
 		bool submit = ImGui::InputText("##Password", pwdInput.data(), pwdInput.capacity() - 1, flags);
-		bool submit2 = ImGui::Button("Set");
+		bool submit2 = ImGui::Button("Add");
 
 		if (submit || submit2)
 		{
@@ -266,21 +248,27 @@ void MainApplet::RenderAddFileModal()
 	if (openAddFileModal)
 	{
 		openAddFileModal = false;
-		ImGui::OpenPopup("Add password - FILE");
+		ImGui::OpenPopup("Add File");
 	}
 
-	if (ImGui::BeginPopupModal("Add password - FILE", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Add File", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
+		Text("Name:");
+		ImGui::SameLine();
 		ImGui::InputText("##Name", nameInput.data(), nameInput.capacity() - 1, ImGuiInputTextFlags_NoUndoRedo);
-		if (ImGui::Button("Select file"))
+		if (ImGui::Button("Select File"))
 		{
 			if (WinApi::OpenFileDialog(L"Place new file in the vault", L"", wBuffer))
-				if (nameInput.empty())
+				if (std::string_view(nameInput.data()).empty())
 					nameInput = StringUtils::WideStringToUtf8(std::filesystem::path(wBuffer).filename().native());
 		}
-		Text(StringUtils::WideStringToUtf8(wBuffer));
+		ImGui::SameLine();
+		if (wBuffer.empty())
+			Text("(not selected)");
+		else
+			Text(StringUtils::WideStringToUtf8(std::filesystem::path(wBuffer).filename().native()));
 
-		if (ImGui::Button("Set"))
+		if (ImGui::Button("Add"))
 		{
 			if (!wBuffer.empty())
 			{
@@ -311,12 +299,12 @@ void MainApplet::RenderShowTextBlockModal()
 	if (openShowTextBlockedModal)
 	{
 		openShowTextBlockedModal = false;
-		ImGui::OpenPopup("Show password");
+		ImGui::OpenPopup("Password Details - Warning");
 	}
 
-	if (ImGui::BeginPopupModal("Show password", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Password Details - Warning", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		Text("Are you sure you want to show the password? Be sure not to expose it via screen sharing!");
+		Text("Are you sure you want to show the password?\nBe sure to not expose it via screen sharing!");
 		if (ImGui::Button("Yes"))
 		{
 			ImGui::CloseCurrentPopup();
@@ -335,13 +323,17 @@ void MainApplet::RenderShowTextModal()
 	if (openShowTextModal)
 	{
 		openShowTextModal = false;
-		ImGui::OpenPopup("Password details");
+		ImGui::OpenPopup("Password Details");
 	}
 
-	if (ImGui::BeginPopupModal("Password details", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Password Details", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		auto& store = game.GetContentStore();
+		Text("Name:");
+		ImGui::SameLine();
 		Text(store.GetName(modalIdx));
+		Text("Value:");
+		ImGui::SameLine();
 		Text(store.GetText(modalIdx));
 
 		if (ImGui::Button("Copy"))
@@ -367,17 +359,21 @@ void MainApplet::RenderChangeTextModal()
 	if (openChangeTextModal)
 	{
 		openChangeTextModal = false;
-		ImGui::OpenPopup("Change password - TEXT");
+		ImGui::OpenPopup("Change Password");
 	}
 
-	if (ImGui::BeginPopupModal("Change password - TEXT", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Change Password", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		auto& store = game.GetContentStore();
+		Text("Name:");
+		ImGui::SameLine();
 		Text(store.GetName(modalIdx));
+
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 
 		constexpr auto flags = ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
 		bool submit = ImGui::InputText("##Password", pwdInput.data(), pwdInput.capacity() - 1, flags);
-		bool submit2 = ImGui::Button("Set");
+		bool submit2 = ImGui::Button("Change");
 
 		if (submit || submit2)
 		{
@@ -387,16 +383,16 @@ void MainApplet::RenderChangeTextModal()
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::SameLine();
+		if (ImGui::Button("Change Name"))
+		{
+			ImGui::CloseCurrentPopup();
+			OpenChangeNameModal(modalIdx);
+		}
+		ImGui::SameLine();
 		if (ImGui::Button("Cancel"))
 		{
 			memset(pwdInput.data(), 0, pwdInput.capacity());
 			ImGui::CloseCurrentPopup();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Change name"))
-		{
-			ImGui::CloseCurrentPopup();
-			OpenChangeNameModal(modalIdx);
 		}
 
 		ImGui::EndPopup();
@@ -408,25 +404,31 @@ void MainApplet::RenderChangeFileModal()
 	if (openChangeFileModal)
 	{
 		openChangeFileModal = false;
-		ImGui::OpenPopup("Change password - FILE");
+		ImGui::OpenPopup("Change File");
 	}
 
-	if (ImGui::BeginPopupModal("Change password - FILE", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Change File", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		static std::wstring file;
 
 		auto& store = game.GetContentStore();
+		Text("Name:");
+		ImGui::SameLine();
 		Text(store.GetName(modalIdx));
 
-		if (ImGui::Button("Select file"))
+		if (ImGui::Button("Select File"))
 		{
 			wBuffer = StringUtils::Utf8ToWideString(store.GetName(modalIdx));
 			WinApi::OpenFileDialog(L"Replace file in vault", wBuffer, file);
 			wBuffer.clear();
 		}
-		Text(StringUtils::WideStringToUtf8(file));
+		ImGui::SameLine();
+		if (file.empty())
+			Text("(not selected)");
+		else
+			Text(StringUtils::WideStringToUtf8(std::filesystem::path(file).filename().native()));
 
-		if (ImGui::Button("Set"))
+		if (ImGui::Button("Change"))
 		{
 			if (!file.empty())
 			{
@@ -439,16 +441,16 @@ void MainApplet::RenderChangeFileModal()
 			}
 		}
 		ImGui::SameLine();
+		if (ImGui::Button("Change Name"))
+		{
+			ImGui::CloseCurrentPopup();
+			OpenChangeNameModal(modalIdx);
+		}
+		ImGui::SameLine();
 		if (ImGui::Button("Cancel"))
 		{
 			file.clear();
 			ImGui::CloseCurrentPopup();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Change name"))
-		{
-			ImGui::CloseCurrentPopup();
-			OpenChangeNameModal(modalIdx);
 		}
 
 		ImGui::EndPopup();
@@ -460,16 +462,16 @@ void MainApplet::RenderChangeNameModal()
 	if (openChangeNameModal)
 	{
 		openChangeNameModal = false;
-		ImGui::OpenPopup("Change password name");
+		ImGui::OpenPopup("Change Name");
 
 		nameInput = game.GetContentStore().GetName(modalIdx);
 	}
 
-	if (ImGui::BeginPopupModal("Change password name", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Change Name", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::InputText("##Name", nameInput.data(), nameInput.capacity() - 1, ImGuiInputTextFlags_NoUndoRedo);
 
-		if (ImGui::Button("Set"))
+		if (ImGui::Button("Change"))
 		{
 			auto name = std::string_view(nameInput.data());
 			game.GetContentStore().SetName(modalIdx, name);
@@ -492,13 +494,13 @@ void MainApplet::RenderDeleteModal()
 	if (openDeleteModal)
 	{
 		openDeleteModal = false;
-		ImGui::OpenPopup("Delete password");
+		ImGui::OpenPopup("Delete Password");
 	}
 
-	if (ImGui::BeginPopupModal("Delete password", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Delete Password", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		Text("Are you sure you want to delete the password?");
-		Text("Name: ");
+		Text("Name:");
 		ImGui::SameLine();
 
 		auto& store = game.GetContentStore();
