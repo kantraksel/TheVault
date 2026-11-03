@@ -35,11 +35,6 @@ bool Game::OnInitialize()
 	gui.RegisterObject(&mainWnd);
 	mainWnd.Initialize();
 	worker.Init();
-
-	//UX redesign (+keyboard-only accessibility, welcome screen tooltip)
-	//move to Vulkan
-	//*support Linux
-	//reset password in clipboard after 1 min
 	return true;
 }
 
