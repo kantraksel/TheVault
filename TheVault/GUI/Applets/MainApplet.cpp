@@ -244,10 +244,13 @@ void MainApplet::RenderAddTextModal()
 		{
 			auto name = std::string_view(nameInput.data());
 			auto pwd = std::string_view(pwdInput.data());
-			game.GetContentStore().AddText(name, pwd);
-			memset(pwdInput.data(), 0, pwdInput.capacity());
-			nameInput.clear();
-			ImGui::CloseCurrentPopup();
+			if (!name.empty() && !pwd.empty())
+			{
+				game.GetContentStore().AddText(name, pwd);
+				memset(pwdInput.data(), 0, pwdInput.capacity());
+				nameInput.clear();
+				ImGui::CloseCurrentPopup();
+			}
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel"))
@@ -382,9 +385,12 @@ void MainApplet::RenderChangeTextModal()
 		if (submit || submit2)
 		{
 			auto pwd = std::string_view(pwdInput.data());
-			store.SetText(modalIdx, pwd);
-			memset(pwdInput.data(), 0, pwdInput.capacity());
-			ImGui::CloseCurrentPopup();
+			if (!pwd.empty())
+			{
+				store.SetText(modalIdx, pwd);
+				memset(pwdInput.data(), 0, pwdInput.capacity());
+				ImGui::CloseCurrentPopup();
+			}
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel"))
@@ -395,6 +401,7 @@ void MainApplet::RenderChangeTextModal()
 		ImGui::SameLine();
 		if (ImGui::Button("Change name"))
 		{
+			memset(pwdInput.data(), 0, pwdInput.capacity());
 			ImGui::CloseCurrentPopup();
 			OpenChangeNameModal(modalIdx);
 		}
@@ -447,6 +454,7 @@ void MainApplet::RenderChangeFileModal()
 		ImGui::SameLine();
 		if (ImGui::Button("Change name"))
 		{
+			file.clear();
 			ImGui::CloseCurrentPopup();
 			OpenChangeNameModal(modalIdx);
 		}
@@ -467,14 +475,17 @@ void MainApplet::RenderChangeNameModal()
 
 	if (ImGui::BeginPopupModal("Change password name", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		ImGui::InputText("##Name", nameInput.data(), nameInput.capacity() - 1, ImGuiInputTextFlags_NoUndoRedo);
+		bool submit = ImGui::InputText("##Name", nameInput.data(), nameInput.capacity() - 1, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoUndoRedo);
 
-		if (ImGui::Button("Set"))
+		if (ImGui::Button("Set") || submit)
 		{
 			auto name = std::string_view(nameInput.data());
-			game.GetContentStore().SetName(modalIdx, name);
-			nameInput.clear();
-			ImGui::CloseCurrentPopup();
+			if (!name.empty())
+			{
+				game.GetContentStore().SetName(modalIdx, name);
+				nameInput.clear();
+				ImGui::CloseCurrentPopup();
+			}
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel"))

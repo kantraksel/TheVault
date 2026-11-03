@@ -297,7 +297,11 @@ Future VaultKeeper::SaveVault(bool close, bool ignoreChecks, bool closeApp)
 				vault.Reset();
 				game.GetUnsavedState().ClearChange();
 				if (close)
-					CloseVault(closeApp);
+				{
+					ResetState();
+					Logger::Log("Closed vault");
+					return closeApp ? TaskRet::TR_CloseApp : TaskRet::TR_SwitchToWelcome;
+				}
 				return TaskRet::TR_SwitchToMainView;
 			});
 }
