@@ -7,6 +7,7 @@
 #include "Applets/MainApplet.h"
 #include "Applets/ProcessApplet.h"
 #include "Applets/ErrorApplet.h"
+#include "Modals.hpp"
 
 class MainWindow : public IRender
 {
@@ -32,6 +33,8 @@ private:
 	MainApplet main;
 	ProcessApplet process;
 	ErrorApplet error;
+
+	Modals modals;
 	
 	bool openConfirmExitModal;
 	bool closeAppOnConfirmExit;
@@ -76,4 +79,9 @@ public:
 		TR_CloseVault,
 		TR_CloseApp,
 	};
+
+	auto& GetModals()
+	{
+		return modals;
+	}
 };

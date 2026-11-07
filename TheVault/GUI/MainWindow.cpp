@@ -131,6 +131,7 @@ void MainWindow::Render()
 		applet->Render();
 		error.RenderModal();
 		RenderConfirmExitModal();
+		modals.Render();
 	}
 	
 	ImGui::End();

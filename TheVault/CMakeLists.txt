@@ -16,6 +16,18 @@ add_executable(TheVault WIN32
 			GUI/Applets/MainApplet.cpp
 			GUI/Applets/ProcessApplet.cpp
 			GUI/Applets/WelcomeApplet.cpp
+			GUI/Modals/BaseModal.cpp
+			GUI/Modals/AddPasswordModal.cpp
+			GUI/Modals/AddFileModal.cpp
+			GUI/Modals/ShowPasswordModal.cpp
+			GUI/Modals/BaseIndexModal.cpp
+			GUI/Modals/ChangePasswordModal.cpp
+			GUI/Modals/ChangeFileModal.cpp
+			GUI/Modals/ChangeNameModal.cpp
+			GUI/Modals/DeleteEntryModal.cpp
+			GUI/Modals/ShowPasswordWarningModal.cpp
+			GUI/Modals/ErrorModal.cpp
+			GUI/Modals.cpp
 )
 target_include_directories(TheVault PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(TheVault PRIVATE
