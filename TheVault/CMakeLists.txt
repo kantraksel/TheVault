@@ -26,8 +26,10 @@ add_executable(TheVault WIN32
 			GUI/Modals/ChangeNameModal.cpp
 			GUI/Modals/DeleteEntryModal.cpp
 			GUI/Modals/ShowPasswordWarningModal.cpp
+			GUI/Modals/ConfirmExitModal.cpp
 			GUI/Modals/ErrorModal.cpp
 			GUI/Modals.cpp
+			GUI/ReactiveScheduler.cpp
 )
 target_include_directories(TheVault PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(TheVault PRIVATE

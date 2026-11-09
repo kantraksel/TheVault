@@ -4,6 +4,7 @@
 #include "App/Game.h"
 #include "Vault/Crypto.h"
 #include "Utils/StringUtils.h"
+#include "../Modals.hpp"
 
 extern Game game;
 
@@ -71,7 +72,7 @@ void LockApplet::RenderMain()
 		if (ImGui::MenuItem("Close"))
 		{
 			if (game.GetUnsavedState().HasChanged())
-				game.GetMainWindow().OpenConfirmExitModal();
+				Modals::GetConfirmExitModal().Open();
 			else
 				game.GetMainWindow().CloseVault();
 		}

@@ -8,6 +8,7 @@
 #include "Applets/ProcessApplet.h"
 #include "Applets/ErrorApplet.h"
 #include "Modals.hpp"
+#include "ReactiveScheduler.hpp"
 
 class MainWindow : public IRender
 {
@@ -33,10 +34,8 @@ private:
 	ErrorApplet error;
 
 	Modals modals;
-	
-	bool openConfirmExitModal;
-	bool closeAppOnConfirmExit;
-	void RenderConfirmExitModal();
+
+	ReactiveScheduler scheduler;
 
 	void SwitchApplet(RenderContent content, IApplet* applet);
 	void SwitchToGlobalProcess();
@@ -51,8 +50,8 @@ public:
 	void Initialize();
 	void Render() override;
 
-	void SaveVault();
-	void CloseVault();
+	void SaveVault(bool closeVault = false, bool exitOnConfirm = false);
+	void CloseVault(bool exitOnConfirm = false);
 
 	void SwitchToWelcome();
 	void SwitchToLoginChallenge();
@@ -60,7 +59,6 @@ public:
 	void SwitchToLockSetup();
 
 	void ShowError(const std::string_view& text, bool critical);
-	void OpenConfirmExitModal(bool closeApp = false);
 
 	void ProcessVaultTask(std::future<uint64_t>&& task, const std::string_view& title = {});
 	uint64_t ProcessVaultResponse(std::future<uint64_t>& task);

@@ -129,7 +129,7 @@ void MainApplet::RenderMenuBar()
 			if (ImGui::MenuItem("Close"))
 			{
 				if (game.GetUnsavedState().HasChanged())
-					game.GetMainWindow().OpenConfirmExitModal();
+					Modals::GetConfirmExitModal().Open();
 				else
 					game.GetMainWindow().CloseVault();
 			}
@@ -138,7 +138,7 @@ void MainApplet::RenderMenuBar()
 			if (ImGui::MenuItem("Exit"))
 			{
 				if (game.GetUnsavedState().HasChanged())
-					game.GetMainWindow().OpenConfirmExitModal(true);
+					Modals::GetConfirmExitModal().Open(true);
 				else
 					GhostFries::Quit();
 			}

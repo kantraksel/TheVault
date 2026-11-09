@@ -17,8 +17,8 @@ void ErrorModal::Open()
 
 void ErrorModal::OnRender()
 {
-	Text(message);
-	if (ImGui::Button("Cancel"))
+	TextWrapped(message);
+	if (ImGui::Button("Close"))
 	{
 		message.clear();
 		ImGui::CloseCurrentPopup();

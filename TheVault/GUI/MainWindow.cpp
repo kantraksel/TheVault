@@ -9,9 +9,6 @@ extern Game game;
 
 MainWindow::MainWindow()
 {
-	openConfirmExitModal = false;
-	closeAppOnConfirmExit = false;
-
 	content = RenderContent::Welcome;
 	applet = nullptr;
 	SwitchToWelcome();
@@ -76,13 +73,18 @@ void MainWindow::SwitchToLockSetup()
 
 void MainWindow::ShowError(const std::string_view& text, bool critical)
 {
-	if (critical)
+	std::string message(text);
+	scheduler.Schedule([=, this]()
 	{
-		error.SetError(text, false);
-		SwitchToCriticalError();
-	}
-	else
-		error.SetError(text, true);
+		if (critical)
+		{
+			error.SetError(message);
+			SwitchToCriticalError();
+		}
+		else
+			Modals::GetErrorModal().Open(message);
+		return true;
+	});
 }
 
 void MainWindow::Render()
@@ -95,23 +97,23 @@ void MainWindow::Render()
 	if (ImGui::Begin("TheVault##MainWindow", nullptr, flags))
 	{
 		applet->Render();
-		error.RenderModal();
-		RenderConfirmExitModal();
 		modals.Render();
 		RenderAppletBar();
 	}
 	
 	ImGui::End();
+
+	scheduler.Run();
 }
 
-void MainWindow::SaveVault()
+void MainWindow::SaveVault(bool closeVault, bool exitOnConfirm)
 {
-	ProcessVaultTask(game.GetKeeper().SaveVault(), "Saving vault...");
+	ProcessVaultTask(game.GetKeeper().SaveVault(closeVault, false, exitOnConfirm), "Saving vault...");
 }
 
-void MainWindow::CloseVault()
+void MainWindow::CloseVault(bool exitOnConfirm)
 {
-	ProcessVaultTask(game.GetKeeper().CloseVault(), "Closing vault...");
+	ProcessVaultTask(game.GetKeeper().CloseVault(exitOnConfirm), "Closing vault...");
 }
 
 void MainWindow::ProcessVaultTask(std::future<uint64_t>&& task, const std::string_view& title)
@@ -173,48 +175,6 @@ uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
 		}
 	}
 	return value;
-}
-
-void MainWindow::OpenConfirmExitModal(bool closeApp)
-{
-	openConfirmExitModal = true;
-	closeAppOnConfirmExit = closeApp;
-}
-
-void MainWindow::RenderConfirmExitModal()
-{
-	if (openConfirmExitModal)
-	{
-		openConfirmExitModal = false;
-		ImGui::OpenPopup("Confirm exit");
-	}
-
-	if (ImGui::BeginPopupModal("Confirm exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		Text("Do you want to save changes?");
-
-		if (ImGui::Button("Yes"))
-		{
-			ImGui::CloseCurrentPopup();
-			ProcessVaultTask(game.GetKeeper().SaveVault(true, false, closeAppOnConfirmExit), "Saving vault...");
-			closeAppOnConfirmExit = false;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("No"))
-		{
-			ImGui::CloseCurrentPopup();
-			ProcessVaultTask(game.GetKeeper().CloseVault(closeAppOnConfirmExit), "Closing vault...");
-			closeAppOnConfirmExit = false;
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel"))
-		{
-			ImGui::CloseCurrentPopup();
-			closeAppOnConfirmExit = false;
-		}
-
-		ImGui::EndPopup();
-	}
 }
 
 void MainWindow::RenderAppletBar()

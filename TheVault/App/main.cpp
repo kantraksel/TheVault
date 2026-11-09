@@ -19,7 +19,7 @@ bool Game::OnClose()
 {
 	if (unsavedState.HasChanged())
 	{
-		mainWnd.OpenConfirmExitModal(true);
+		Modals::GetConfirmExitModal().Open(true);
 		return false;
 	}
 	return true;

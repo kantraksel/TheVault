@@ -41,6 +41,14 @@ static void Text(const std::string_view& label)
 	ImGui::TextUnformatted(label.data(), label.data() + label.size());
 }
 
+/// Used for long labels, possibly extending outside render space
+static void TextWrapped(const std::string_view& label)
+{
+	ImGui::PushTextWrapPos(600.0f);
+	ImGui::TextUnformatted(label.data(), label.data() + label.size());
+	ImGui::PopTextWrapPos();
+}
+
 static void TextWidget(const std::string_view& label)
 {
 	using namespace ImGui;

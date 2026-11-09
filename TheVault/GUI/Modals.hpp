@@ -8,6 +8,7 @@
 #include "Modals/ChangeNameModal.hpp"
 #include "Modals/DeleteEntryModal.hpp"
 #include "Modals/ErrorModal.hpp"
+#include "Modals/ConfirmExitModal.hpp"
 
 struct Modals
 {
@@ -20,6 +21,7 @@ private:
 	ChangeFileModal changeFileModal;
 	ChangeNameModal changeNameModal;
 	DeleteEntryModal deleteEntryModal;
+	ConfirmExitModal confirmExitModal;
 	ErrorModal errorModal;
 
 public:
@@ -33,5 +35,6 @@ public:
 	static ChangeFileModal& GetChangeFileModal();
 	static ChangeNameModal& GetChangeNameModal();
 	static DeleteEntryModal& GetDeleteEntryModal();
+	static ConfirmExitModal& GetConfirmExitModal();
 	static ErrorModal& GetErrorModal();
 };

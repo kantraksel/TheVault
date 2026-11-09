@@ -1,12 +1,12 @@
 #include "Utils/ImGuiUtils.h"
 #include "ErrorApplet.h"
 #include "App/Game.h"
+#include "Engine/GhostFries.h"
 
 extern Game game;
 
 ErrorApplet::ErrorApplet()
 {
-	openErrorModal = false;
 }
 
 ErrorApplet::~ErrorApplet()
@@ -15,45 +15,19 @@ ErrorApplet::~ErrorApplet()
 
 void ErrorApplet::Render()
 {
-	std::lock_guard lock(errorMutex);
 	BeginVisibleChildWindow("##ErrorApplet", ImVec2(0, 0), ImGuiChildFlags_Borders | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
 
-	Text("App encountered critical error");
+	Text("Critical error");
 	ImGui::Separator();
-	Text(errorText);
+	TextWrapped(errorText);
 
 	if (ImGui::Button("Exit"))
-		std::exit(1);
+		GhostFries::Quit();
 
 	ImGui::EndChild();
 }
 
-void ErrorApplet::RenderModal()
+void ErrorApplet::SetError(const std::string_view& text)
 {
-	if (openErrorModal)
-	{
-		openErrorModal = false;
-		ImGui::OpenPopup("Error##ErrorModal");
-	}
-
-	if (ImGui::BeginPopupModal("Error##ErrorModal", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		std::lock_guard lock(errorMutex);
-		Text(errorText);
-		if (ImGui::Button("Close"))
-		{
-			errorText.clear();
-			ImGui::CloseCurrentPopup();
-		}
-
-		ImGui::EndPopup();
-	}
-}
-
-void ErrorApplet::SetError(const std::string_view& text, bool openModal)
-{
-	std::lock_guard lock(errorMutex);
 	errorText = text;
-	if (openModal)
-		openErrorModal = true;
 }
