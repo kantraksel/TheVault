@@ -5,7 +5,7 @@
 
 extern Game game;
 
-LoginApplet::LoginApplet()
+LoginApplet::LoginApplet() : firstFrameDraw{}
 {
 	hint.reserve(256);
 }
@@ -20,16 +20,22 @@ void LoginApplet::Initialize()
 	Crypto::ZeroMemory(passwordInput);
 }
 
+void LoginApplet::OnEnter()
+{
+	firstFrameDraw = true;
+}
+
 void LoginApplet::OnLeave()
 {
 	hint.clear();
+	Crypto::ZeroMemory(passwordInput);
 }
 
 void LoginApplet::Render()
 {
 	BeginVisibleChildWindow("##Login", ImVec2(350, 0));
 
-	Text("Complete challenge series to open the vault");
+	Text("Enter password matching the hint:");
 	ImGui::Separator();
 	Text(hint);
 
@@ -37,12 +43,14 @@ void LoginApplet::Render()
 	{
 		ImGui::BeginGroup();
 
-		SetNextRightButtonAlign("Submit");
-		constexpr auto flags = ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
+		if (firstFrameDraw)
+			ImGui::SetKeyboardFocusHere();
+
+		SetNextRightButtonAlign("Unlock");
+		constexpr auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
 		bool submit = ImGui::InputText("##Password", reinterpret_cast<char*>(passwordInput.data()), passwordInput.size(), flags);
 		ImGui::SameLine();
-		bool submit2 = ImGui::Button("Submit");
-		if (submit || submit2)
+		if (ImGui::Button("Unlock") || submit)
 		{
 			vaultTask = game.GetKeeper().SubmitPassword(passwordInput);
 			Crypto::ZeroMemory(passwordInput);
@@ -52,11 +60,12 @@ void LoginApplet::Render()
 	}
 	else
 	{
-		ImGui::ProgressBar(-1.0f * (float)ImGui::GetTime(), ImVec2(-FLT_MIN, 0), "Decrypting...");
+		ImGui::ProgressBar(-1.0f * static_cast<float>(ImGui::GetTime()), ImVec2(-FLT_MIN, 0), "Decrypting...");
 		game.GetMainWindow().ProcessVaultResponse(vaultTask);
 	}
 
 	ImGui::EndChild();
+	firstFrameDraw = false;
 }
 
 void LoginApplet::RefreshHintName()

@@ -5,29 +5,17 @@
 #include "App/Game.h"
 #include "Utils/WinApi.h"
 #include "../Modals.hpp"
+#include "Engine/GhostFries.h"
 
 extern Game game;
 
 void MainApplet::Render()
 {
-	if (ImGui::BeginMenuBar())
-	{
-		if (ImGui::MenuItem("Settings"))
-			game.GetMainWindow().SwitchToLockSetup();
-		if (ImGui::MenuItem("Save"))
-			game.GetMainWindow().SaveVault();
-		if (ImGui::MenuItem("Close"))
-		{
-			if (game.GetUnsavedState().HasChanged())
-				game.GetMainWindow().OpenConfirmExitModal();
-			else
-				game.GetMainWindow().CloseVault();
-		}
-		ImGui::EndMenuBar();
-	}
+	RenderMenuBar();
+	ProcessShortcuts();
 
-	constexpr auto flags = ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit;
-	if (ImGui::BeginTable("MainContent", 2, flags, ImVec2(0, 0), ImGuiTableFlags_ScrollY))
+	constexpr auto flags = ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY;
+	if (ImGui::BeginTable("MainContent", 2, flags))
 	{
 		ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch);
 		ImGui::TableSetupColumn("Actions");
@@ -52,10 +40,17 @@ void MainApplet::Render()
 				if (ImGui::Button("Copy"))
 				{
 					WinApi::SetClipboardText(store.GetText(i));
+					ImGui::OpenPopup("password_copied");
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Change"))
 					Modals::GetChangePasswordModal().Open(i);
+
+				if (ImGui::BeginPopup("password_copied"))
+				{
+					Text("Copied to clipboard");
+					ImGui::EndPopup();
+				}
 			}
 			else if (store.IsFile(i))
 			{
@@ -111,4 +106,65 @@ void MainApplet::Render()
 
 		ImGui::EndTable();
 	}
+}
+
+void MainApplet::RenderMenuBar()
+{
+	if (ImGui::BeginMenuBar())
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("New", nullptr, false, false))
+			{
+
+			}
+
+			if (ImGui::MenuItem("Open", "Ctrl+O", false, false))
+			{
+
+			}
+
+			if (ImGui::MenuItem("Save", "Ctrl+S"))
+				game.GetMainWindow().SaveVault();
+			if (ImGui::MenuItem("Close"))
+			{
+				if (game.GetUnsavedState().HasChanged())
+					game.GetMainWindow().OpenConfirmExitModal();
+				else
+					game.GetMainWindow().CloseVault();
+			}
+
+			ImGui::Separator();
+			if (ImGui::MenuItem("Exit"))
+			{
+				if (game.GetUnsavedState().HasChanged())
+					game.GetMainWindow().OpenConfirmExitModal(true);
+				else
+					GhostFries::Quit();
+			}
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::MenuItem("Locks"))
+			game.GetMainWindow().SwitchToLockSetup();
+
+		if (ImGui::MenuItem("About", nullptr, false, false))
+		{
+
+		}
+
+		ImGui::EndMenuBar();
+	}
+}
+
+void MainApplet::ProcessShortcuts()
+{
+	if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O))
+	{
+
+	}
+
+	if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
+		game.GetMainWindow().SaveVault();
 }

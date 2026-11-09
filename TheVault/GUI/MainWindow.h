@@ -20,8 +20,6 @@ private:
 		LoginChallenge,
 		MainView,
 		LockSetup,
-
-		DemoWindow,
 	};
 
 	RenderContent content;
@@ -43,6 +41,8 @@ private:
 	void SwitchApplet(RenderContent content, IApplet* applet);
 	void SwitchToGlobalProcess();
 	void SwitchToCriticalError();
+
+	void RenderAppletBar();
 
 public:
 	MainWindow();

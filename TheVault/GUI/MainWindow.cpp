@@ -27,6 +27,10 @@ void MainWindow::Initialize()
 	lock.Initialize();
 }
 
+void IApplet::OnEnter()
+{
+}
+
 void IApplet::OnLeave()
 {
 }
@@ -37,6 +41,7 @@ void MainWindow::SwitchApplet(RenderContent content, IApplet* applet)
 		this->applet->OnLeave();
 	this->content = content;
 	this->applet = applet;
+	applet->OnEnter();
 }
 
 void MainWindow::SwitchToWelcome()
@@ -80,58 +85,20 @@ void MainWindow::ShowError(const std::string_view& text, bool critical)
 		error.SetError(text, true);
 }
 
-class DemoWindowApplet : public IApplet
-{
-public:
-	void Render() override
-	{
-		ImGui::ShowDemoWindow();
-	}
-};
-static DemoWindowApplet demoApplet;
-
 void MainWindow::Render()
 {
 	auto* viewport = ImGui::GetMainViewport();
 	ImGui::SetNextWindowPos(viewport->Pos);
 	ImGui::SetNextWindowSize(viewport->Size);
 
-#if _DEBUG
 	constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
-#else
-	constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings;
-#endif
 	if (ImGui::Begin("TheVault##MainWindow", nullptr, flags))
 	{
-#if _DEBUG
-		if (ImGui::BeginMenuBar())
-		{
-			if (ImGui::MenuItem("Welcome", nullptr, content == RenderContent::Welcome))
-				SwitchToWelcome();
-
-			if (ImGui::MenuItem("GlobalProcess", nullptr, content == RenderContent::GlobalProcess))
-				SwitchToGlobalProcess();
-
-			if (ImGui::MenuItem("LoginChallenge", nullptr, content == RenderContent::LoginChallenge))
-				SwitchToLoginChallenge();
-
-			if (ImGui::MenuItem("MainView", nullptr, content == RenderContent::MainView))
-				SwitchToMainView();
-
-			if (ImGui::MenuItem("LockSetup", nullptr, content == RenderContent::LockSetup))
-				SwitchToLockSetup();
-
-			if (ImGui::MenuItem("DemoWindow", nullptr, content == RenderContent::DemoWindow))
-				SwitchApplet(RenderContent::DemoWindow, &demoApplet);
-
-			ImGui::EndMenuBar();
-		}
-#endif
-
 		applet->Render();
 		error.RenderModal();
 		RenderConfirmExitModal();
 		modals.Render();
+		RenderAppletBar();
 	}
 	
 	ImGui::End();
@@ -248,4 +215,36 @@ void MainWindow::RenderConfirmExitModal()
 
 		ImGui::EndPopup();
 	}
+}
+
+void MainWindow::RenderAppletBar()
+{
+#if _DEBUG
+	static bool showDemoWindow = false;
+	if (showDemoWindow)
+		ImGui::ShowDemoWindow(&showDemoWindow);
+
+	if (ImGui::BeginMenuBar())
+	{
+		if (ImGui::MenuItem("Welcome", nullptr, content == RenderContent::Welcome))
+			SwitchToWelcome();
+
+		if (ImGui::MenuItem("GlobalProcess", nullptr, content == RenderContent::GlobalProcess))
+			SwitchToGlobalProcess();
+
+		if (ImGui::MenuItem("LoginChallenge", nullptr, content == RenderContent::LoginChallenge))
+			SwitchToLoginChallenge();
+
+		if (ImGui::MenuItem("MainView", nullptr, content == RenderContent::MainView))
+			SwitchToMainView();
+
+		if (ImGui::MenuItem("LockSetup", nullptr, content == RenderContent::LockSetup))
+			SwitchToLockSetup();
+
+		if (ImGui::MenuItem("DemoWindow", nullptr, showDemoWindow))
+			showDemoWindow = !showDemoWindow;
+
+		ImGui::EndMenuBar();
+	}
+#endif
 }
