@@ -106,6 +106,8 @@ void MainApplet::Render()
 
 		ImGui::EndTable();
 	}
+
+	lockApplet.Render();
 }
 
 void MainApplet::RenderMenuBar()
@@ -146,8 +148,13 @@ void MainApplet::RenderMenuBar()
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::MenuItem("Locks"))
-			game.GetMainWindow().SwitchToLockSetup();
+		if (ImGui::MenuItem("Locks", nullptr, lockApplet.IsOpen()))
+		{
+			if (lockApplet.IsOpen())
+				lockApplet.Close();
+			else
+				lockApplet.Open();
+		}
 
 		if (ImGui::MenuItem("About", nullptr, false, false))
 		{

@@ -47,7 +47,7 @@ public:
 	};
 	DirectApi GetDirectApi();
 	
-	void AddHint(const std::string_view& hint);
+	int AddHint(const std::string_view& hint);
 	void RemoveHint(int i);
 	Future SetHintKey(int i, const std::string_view& password);
 	void ChangeHint(int i, const std::string_view& hint);

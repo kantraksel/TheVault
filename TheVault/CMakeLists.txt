@@ -29,6 +29,7 @@ add_executable(TheVault WIN32
 			GUI/Modals/ConfirmExitModal.cpp
 			GUI/Modals/ErrorModal.cpp
 			GUI/Modals/BaseDualIndexModal.cpp
+			GUI/Modals/AddLockModal.cpp
 			GUI/Modals/ChangeLockPasswordModal.cpp
 			GUI/Modals.cpp
 			GUI/ReactiveScheduler.cpp

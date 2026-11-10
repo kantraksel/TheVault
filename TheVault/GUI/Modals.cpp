@@ -13,6 +13,7 @@ void Modals::Render()
 	changeFileModal.Render();
 	changeNameModal.Render();
 	deleteEntryModal.Render();
+	addLockModal.Render();
 	changeLockPasswordModal.Render();
 	confirmExitModal.Render();
 	errorModal.Render();
@@ -56,6 +57,11 @@ ChangeNameModal& Modals::GetChangeNameModal()
 DeleteEntryModal& Modals::GetDeleteEntryModal()
 {
 	return game.GetMainWindow().GetModals().deleteEntryModal;
+}
+
+AddLockModal& Modals::GetAddLockModal()
+{
+	return game.GetMainWindow().GetModals().addLockModal;
 }
 
 ChangeLockPasswordModal& Modals::GetChangeLockPasswordModal()

@@ -168,15 +168,18 @@ Future VaultKeeper::SubmitPassword(const SecureArray& password)
 		}, password);
 }
 
-void VaultKeeper::AddHint(const std::string_view& hint)
+int VaultKeeper::AddHint(const std::string_view& hint)
 {
 	std::lock_guard lock(chainMutex);
+
+	int index = mChain.size();
 	mChain.push_back(Layer
 		{
 			.hint = std::string(hint),
 		});
 
 	game.GetUnsavedState().NotifyChange();
+	return index;
 }
 
 void VaultKeeper::RemoveHint(int i)

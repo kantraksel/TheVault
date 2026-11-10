@@ -7,6 +7,7 @@
 #include "Modals/ChangeFileModal.hpp"
 #include "Modals/ChangeNameModal.hpp"
 #include "Modals/DeleteEntryModal.hpp"
+#include "Modals/AddLockModal.hpp"
 #include "Modals/ChangeLockPasswordModal.hpp"
 #include "Modals/ErrorModal.hpp"
 #include "Modals/ConfirmExitModal.hpp"
@@ -22,6 +23,7 @@ private:
 	ChangeFileModal changeFileModal;
 	ChangeNameModal changeNameModal;
 	DeleteEntryModal deleteEntryModal;
+	AddLockModal addLockModal;
 	ChangeLockPasswordModal changeLockPasswordModal;
 	ConfirmExitModal confirmExitModal;
 	ErrorModal errorModal;
@@ -37,6 +39,7 @@ public:
 	static ChangeFileModal& GetChangeFileModal();
 	static ChangeNameModal& GetChangeNameModal();
 	static DeleteEntryModal& GetDeleteEntryModal();
+	static AddLockModal& GetAddLockModal();
 	static ChangeLockPasswordModal& GetChangeLockPasswordModal();
 	static ConfirmExitModal& GetConfirmExitModal();
 	static ErrorModal& GetErrorModal();

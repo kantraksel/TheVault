@@ -36,6 +36,16 @@ static bool ButtonRightAligned(const char* label)
 	return ImGui::Button(label);
 }
 
+static void PadMenuItem(const char* label)
+{
+	auto& style = ImGui::GetStyle();
+
+	auto textSize = ImGui::CalcTextSize(label, nullptr, true);
+	float width = textSize.x + style.ItemSpacing.x * 2.0f + style.FramePadding.x;
+	width = ImGui::GetContentRegionAvail().x - width;
+	ImGui::Dummy(ImVec2(width, 0));
+}
+
 static void Text(const std::string_view& label)
 {
 	ImGui::TextUnformatted(label.data(), label.data() + label.size());
@@ -90,14 +100,6 @@ static void TextWidget(const std::string_view& label)
         // Render (we don't hide text after ## in this end-user function)
         RenderTextWrapped(bb.Min, text_begin, text_end, wrap_width);
     }
-}
-
-static void InvisibleButton(const char* label)
-{
-	auto& style = ImGui::GetStyle();
-	auto label_size = ImGui::CalcTextSize(label, nullptr, true);
-	ImVec2 size = ImGui::CalcItemSize({ 0.0f, 0.0f }, label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
-	ImGui::InvisibleButton(label, size);
 }
 
 static void CenterNextWindow()

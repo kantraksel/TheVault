@@ -3,7 +3,6 @@
 #include "Applets/IApplet.h"
 #include "Applets/WelcomeApplet.h"
 #include "Applets/LoginApplet.h"
-#include "Applets/LockApplet.h"
 #include "Applets/MainApplet.h"
 #include "Applets/ProcessApplet.h"
 #include "Applets/ErrorApplet.h"
@@ -20,7 +19,6 @@ private:
 		CriticalError,
 		LoginChallenge,
 		MainView,
-		LockSetup,
 	};
 
 	RenderContent content;
@@ -28,7 +26,6 @@ private:
 
 	WelcomeApplet welcome;
 	LoginApplet login;
-	LockApplet lock;
 	MainApplet main;
 	ProcessApplet process;
 	ErrorApplet error;
@@ -56,7 +53,6 @@ public:
 	void SwitchToWelcome();
 	void SwitchToLoginChallenge();
 	void SwitchToMainView();
-	void SwitchToLockSetup();
 
 	void ShowError(const std::string_view& text, bool critical);
 

@@ -1,16 +1,20 @@
 #pragma once
-#include "Utils/SecureArray.h"
-#include "IApplet.h"
 
-class LockApplet : public IApplet
+class LockApplet
 {
 private:
-	std::string nameInput;
+	bool isOpen;
 
 public:
 	LockApplet();
 	~LockApplet();
 
-	void OnLeave() override;
-	void Render() override;
+	void Open();
+	void Close();
+	void Render();
+
+	bool IsOpen()
+	{
+		return isOpen;
+	}
 };

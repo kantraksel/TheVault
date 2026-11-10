@@ -65,11 +65,6 @@ void MainWindow::SwitchToMainView()
 	SwitchApplet(RenderContent::MainView, &main);
 }
 
-void MainWindow::SwitchToLockSetup()
-{
-	SwitchApplet(RenderContent::LockSetup, &lock);
-}
-
 void MainWindow::ShowError(const std::string_view& text, bool critical)
 {
 	std::string message(text);
@@ -149,7 +144,8 @@ uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
 		}
 		case TR_SwitchToLockSetup:
 		{
-			SwitchToLockSetup();
+			SwitchToMainView();
+			main.GetLockApplet().Open();
 			break;
 		}
 		case TR_FetchNextHint:
@@ -196,9 +192,6 @@ void MainWindow::RenderAppletBar()
 
 		if (ImGui::MenuItem("MainView", nullptr, content == RenderContent::MainView))
 			SwitchToMainView();
-
-		if (ImGui::MenuItem("LockSetup", nullptr, content == RenderContent::LockSetup))
-			SwitchToLockSetup();
 
 		if (ImGui::MenuItem("DemoWindow", nullptr, showDemoWindow))
 			showDemoWindow = !showDemoWindow;

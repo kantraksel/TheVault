@@ -1,69 +1,52 @@
-#include <string>
-#include "Utils/ImGuiUtils.h"
 #include "LockApplet.h"
+#include "Utils/ImGuiUtils.h"
 #include "App/Game.h"
 #include "Utils/StringUtils.h"
 #include "../Modals.hpp"
 
 extern Game game;
 
-LockApplet::LockApplet()
+LockApplet::LockApplet() : isOpen{}
 {
-	nameInput.reserve(256);
 }
 
 LockApplet::~LockApplet()
 {
 }
 
-void LockApplet::OnLeave()
+void LockApplet::Open()
 {
-	nameInput.clear();
+	isOpen = true;
+}
+
+void LockApplet::Close()
+{
+	isOpen = false;
 }
 
 void LockApplet::Render()
 {
+	if (!isOpen)
+		return;
 	BeginVisibleChildWindow("##VaultEncryptor", ImVec2(617, 200), ImGuiChildFlags_Borders, ImGuiWindowFlags_MenuBar);
 
 	if (ImGui::BeginMenuBar())
 	{
-		if (ImGui::MenuItem("Passwords"))
-			game.GetMainWindow().SwitchToMainView();
-		if (ImGui::MenuItem("Save"))
-			game.GetMainWindow().SaveVault();
+		Text("Vault Locks");
+
+		PadMenuItem("Close");
 		if (ImGui::MenuItem("Close"))
-		{
-			if (game.GetUnsavedState().HasChanged())
-				Modals::GetConfirmExitModal().Open();
-			else
-				game.GetMainWindow().CloseVault();
-		}
+			Close();
+
 		ImGui::EndMenuBar();
 	}
 
-	Text("Vault Locks");
-	ImGui::Separator();
-
-	bool submit2 = ImGui::Button("Add");
-	ImGui::SameLine();
-	Text("Name:");
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-	bool submit = ImGui::InputText("##HintNameInput", nameInput.data(), nameInput.capacity() - 1, ImGuiInputTextFlags_EnterReturnsTrue);
-	if (submit || submit2)
-	{
-		game.GetKeeper().AddHint(nameInput.data());
-		nameInput.clear();
-	}
-
-	constexpr auto flags = ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit;
-	if (ImGui::BeginTable("HintEditor", 5, flags, ImVec2(600, 100), ImGuiTableFlags_ScrollY))
+	constexpr auto flags = ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY;
+	if (ImGui::BeginTable("HintEditor", 3, flags))
 	{
 		ImGui::TableSetupColumn("No.");
-		ImGui::TableSetupColumn("Hint", ImGuiTableColumnFlags_WidthStretch);
-		ImGui::TableSetupColumn("Name");
-		ImGui::TableSetupColumn("Value");
-		ImGui::TableSetupColumn("");
+		ImGui::TableSetupColumn("Lock", ImGuiTableColumnFlags_WidthStretch);
+		ImGui::TableSetupColumn("Actions");
 		ImGui::TableHeadersRow();
 
 		auto keeper = game.GetKeeper().GetDirectApi();
@@ -81,34 +64,37 @@ void LockApplet::Render()
 			Text(keeper.GetHint(i));
 
 			ImGui::TableNextColumn();
-			if (ImGui::Button("Change##ChangeName"))
-				Modals::GetChangeNameModal().Open(i, true);
+			auto title = "Change";
+			float width = 0;
 
-			ImGui::TableNextColumn();
-			auto* title = "Set";
-			if (keeper.IsKeyAssigned(i))
-				title = "Change";
-			if (ImGui::Button(title))
+			if (!keeper.IsKeyAssigned(i))
+			{
+				auto& style = ImGui::GetStyle();
+				auto textSize = ImGui::CalcTextSize(title, nullptr, true);
+				width = textSize.x + style.FramePadding.x * 2.0f;
+				title = "Set";
+			}
+
+			if (ImGui::Button(title, ImVec2(width, 0)))
 				Modals::GetChangeLockPasswordModal().Open(i);
-
-			ImGui::TableNextColumn();
+			ImGui::SameLine();
 			if (ImGui::Button("Delete"))
 				Modals::GetDeleteEntryModal().Open(i, true);
 
 			ImGui::PopID();
 		}
 
-		if (hintCount == 0)
-		{
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-			ImGui::TableNextColumn();
-			Text("There are no hints. Consider adding one :)");
-			ImGui::TableNextColumn();
-			InvisibleButton("Change");
-			ImGui::TableNextColumn();
-			InvisibleButton("Delete");
-		}
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		ImGui::TableNextColumn();
+		if (ImGui::Button("New Vault Lock"))
+			Modals::GetAddLockModal().Open();
+		ImGui::TableNextColumn();
+		ImGui::BeginDisabled();
+		ImGui::Button("Change");
+		ImGui::SameLine();
+		ImGui::Button("Delete");
+		ImGui::EndDisabled();
 
 		ImGui::EndTable();
 	}
