@@ -4,7 +4,7 @@
 
 extern Game game;
 
-ChangeNameModal::ChangeNameModal() : BaseIndexModal("Change Name")
+ChangeNameModal::ChangeNameModal() : BaseDualIndexModal("Change Name")
 {
 	nameInput.resize(256);
 }
@@ -21,7 +21,11 @@ void ChangeNameModal::OnRender()
 		auto name = std::string_view(nameInput.data());
 		if (!name.empty())
 		{
-			game.GetContentStore().SetName(selectedIndex, name);
+			if (!isLockIndex)
+				game.GetContentStore().SetName(selectedIndex, name);
+			else
+				game.GetKeeper().ChangeHint(selectedIndex, name);
+
 			memset(nameInput.data(), 0, nameInput.size());
 			ImGui::CloseCurrentPopup();
 		}
@@ -36,7 +40,12 @@ void ChangeNameModal::OnRender()
 
 void ChangeNameModal::OnOpen()
 {
-	auto name = game.GetContentStore().GetName(selectedIndex);
+	std::string_view name;
+	if (!isLockIndex)
+		name = game.GetContentStore().GetName(selectedIndex);
+	else
+		name = game.GetKeeper().GetDirectApi().GetHint(selectedIndex);
+
 	memcpy_s(nameInput.data(), nameInput.size(), name.data(), name.size());
 	if (nameInput.size() > name.size())
 		nameInput[name.size()] = 0;

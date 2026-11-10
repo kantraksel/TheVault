@@ -21,7 +21,6 @@ MainWindow::~MainWindow()
 void MainWindow::Initialize()
 {
 	login.Initialize();
-	lock.Initialize();
 }
 
 void IApplet::OnEnter()

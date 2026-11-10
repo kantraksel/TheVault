@@ -49,7 +49,7 @@ public:
 	
 	void AddHint(const std::string_view& hint);
 	void RemoveHint(int i);
-	Future SetHintKey(int i, const SecureArray& password);
+	Future SetHintKey(int i, const std::string_view& password);
 	void ChangeHint(int i, const std::string_view& hint);
 	
 	uint64_t RaiseError(const std::string_view& msg, bool critical = false);

@@ -196,7 +196,7 @@ void VaultKeeper::RemoveHint(int i)
 	game.GetUnsavedState().NotifyChange();
 }
 
-Future VaultKeeper::SetHintKey(int i, const SecureArray& password)
+Future VaultKeeper::SetHintKey(int i, const std::string_view& password)
 {
 	return game.GetWorker().SendCmd([=, this](const SecureArray& password) -> uint64_t
 		{
@@ -204,13 +204,8 @@ Future VaultKeeper::SetHintKey(int i, const SecureArray& password)
 			if (i >= mChain.size() || i < 0)
 				return TaskRet::TR_Failed;
 
-			//this check should be in window
-			auto size = strnlen_s(reinterpret_cast<const char*>(password.data()), password.size());
-			auto pass = std::string_view(reinterpret_cast<const char*>(password.data()), size);
-			if (pass.empty())
-				return TaskRet::TR_Failed;
-
 			Logger::Log("Creating password key");
+			auto pass = std::string_view(reinterpret_cast<const char*>(password.data()), password.size());
 			SecureArray salt;
 			auto key = game.GetVault().CreateKey(pass, salt);
 			if (!key)
@@ -222,7 +217,7 @@ Future VaultKeeper::SetHintKey(int i, const SecureArray& password)
 
 			game.GetUnsavedState().NotifyChange();
 			return TaskRet::TR_Success;
-		}, password);
+		}, SecureArray::CreateRef(password.data(), password.size()));
 }
 
 Future VaultKeeper::SaveVault(bool close, bool ignoreChecks, bool closeApp)

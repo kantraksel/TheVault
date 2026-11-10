@@ -5,7 +5,7 @@ class BaseIndexModal : public BaseModal
 {
 public:
 	BaseIndexModal(const char* modalId);
-	void Open(int index);
+	virtual void Open(int index);
 
 protected:
 	int selectedIndex;

@@ -1,7 +1,7 @@
 #pragma once
-#include "BaseIndexModal.hpp"
+#include "BaseDualIndexModal.hpp"
 
-class DeleteEntryModal : public BaseIndexModal
+class DeleteEntryModal : public BaseDualIndexModal
 {
 public:
 	DeleteEntryModal();

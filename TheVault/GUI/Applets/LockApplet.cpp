@@ -2,7 +2,6 @@
 #include "Utils/ImGuiUtils.h"
 #include "LockApplet.h"
 #include "App/Game.h"
-#include "Vault/Crypto.h"
 #include "Utils/StringUtils.h"
 #include "../Modals.hpp"
 
@@ -10,11 +9,6 @@ extern Game game;
 
 LockApplet::LockApplet()
 {
-	openSetHintValueModal = false;
-	openChangeHintModal = false;
-	openDeleteModal = false;
-	modalIdx = 0;
-
 	nameInput.reserve(256);
 }
 
@@ -22,44 +16,12 @@ LockApplet::~LockApplet()
 {
 }
 
-void LockApplet::Initialize()
-{
-	passwordInput = SecureArray(256);
-	Crypto::ZeroMemory(passwordInput);
-}
-
 void LockApplet::OnLeave()
 {
 	nameInput.clear();
 }
 
-void LockApplet::OpenSetHintValueModal(int idx)
-{
-	modalIdx = idx;
-	openSetHintValueModal = true;
-}
-
-void LockApplet::OpenChangeHintModal(int idx)
-{
-	modalIdx = idx;
-	openChangeHintModal = true;
-}
-
-void LockApplet::OpenDeleteModal(int idx)
-{
-	modalIdx = idx;
-	openDeleteModal = true;
-}
-
 void LockApplet::Render()
-{
-	RenderMain();
-	RenderSetHintValueModal();
-	RenderChangeHintModal();
-	RenderDeleteModal();
-}
-
-void LockApplet::RenderMain()
 {
 	BeginVisibleChildWindow("##VaultEncryptor", ImVec2(617, 200), ImGuiChildFlags_Borders, ImGuiWindowFlags_MenuBar);
 
@@ -120,18 +82,18 @@ void LockApplet::RenderMain()
 
 			ImGui::TableNextColumn();
 			if (ImGui::Button("Change##ChangeName"))
-				OpenChangeHintModal(i);
+				Modals::GetChangeNameModal().Open(i, true);
 
 			ImGui::TableNextColumn();
 			auto* title = "Set";
 			if (keeper.IsKeyAssigned(i))
 				title = "Change";
 			if (ImGui::Button(title))
-				OpenSetHintValueModal(i);
+				Modals::GetChangeLockPasswordModal().Open(i);
 
 			ImGui::TableNextColumn();
 			if (ImGui::Button("Delete"))
-				OpenDeleteModal(i);
+				Modals::GetDeleteEntryModal().Open(i, true);
 
 			ImGui::PopID();
 		}
@@ -152,117 +114,4 @@ void LockApplet::RenderMain()
 	}
 
 	ImGui::EndChild();
-}
-
-void LockApplet::RenderSetHintValueModal()
-{
-	if (openSetHintValueModal)
-	{
-		openSetHintValueModal = false;
-		ImGui::OpenPopup("Hint Value");
-	}
-
-	if (ImGui::BeginPopupModal("Hint Value", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		auto& keeper = game.GetKeeper();
-
-		{
-			auto api = keeper.GetDirectApi();
-			Text(api.GetHint(modalIdx));
-		}
-
-		if (!vaultTask.valid())
-		{
-			constexpr auto flags = ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
-			bool submit = ImGui::InputText("##Password", reinterpret_cast<char*>(passwordInput.data()), passwordInput.size(), flags);
-			bool submit2 = ImGui::Button("Submit");
-
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel"))
-			{
-				ImGui::CloseCurrentPopup();
-				Crypto::ZeroMemory(passwordInput);
-			}
-
-			if (submit || submit2)
-			{
-				vaultTask = keeper.SetHintKey(modalIdx, passwordInput);
-				Crypto::ZeroMemory(passwordInput);
-			}
-		}
-		else
-		{
-			ImGui::ProgressBar(-1.0f * (float)ImGui::GetTime(), ImVec2(-FLT_MIN, 0), "Hashing...");
-			if (game.GetMainWindow().ProcessVaultResponse(vaultTask) != MainWindow::_TR_NoAction)
-				ImGui::CloseCurrentPopup();
-		}
-
-		ImGui::EndPopup();
-	}
-}
-
-void LockApplet::RenderChangeHintModal()
-{
-	if (openChangeHintModal)
-	{
-		openChangeHintModal = false;
-		ImGui::OpenPopup("Change hint");
-
-		nameInput = game.GetKeeper().GetDirectApi().GetHint(modalIdx);
-	}
-
-	if (ImGui::BeginPopupModal("Change hint", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		ImGui::InputText("##Name", nameInput.data(), nameInput.capacity() - 1, ImGuiInputTextFlags_NoUndoRedo);
-
-		if (ImGui::Button("Set"))
-		{
-			auto name = std::string_view(nameInput.data());
-			game.GetKeeper().ChangeHint(modalIdx, name);
-			nameInput.clear();
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Cancel"))
-		{
-			nameInput.clear();
-			ImGui::CloseCurrentPopup();
-		}
-
-		ImGui::EndPopup();
-	}
-}
-
-void LockApplet::RenderDeleteModal()
-{
-	if (openDeleteModal)
-	{
-		openDeleteModal = false;
-		ImGui::OpenPopup("Delete Hint");
-	}
-
-	if (ImGui::BeginPopupModal("Delete Hint", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		Text("Are you sure you want to delete the hint?");
-		Text("Name: ");
-		ImGui::SameLine();
-
-		auto& keeper = game.GetKeeper();
-
-		{
-			auto api = keeper.GetDirectApi();
-			Text(api.GetHint(modalIdx));
-		}
-		
-		if (ImGui::Button("Yes"))
-		{
-			keeper.RemoveHint(modalIdx);
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("No"))
-			ImGui::CloseCurrentPopup();
-
-		ImGui::EndPopup();
-	}
 }

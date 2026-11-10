@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
-#include "BaseIndexModal.hpp"
+#include "BaseDualIndexModal.hpp"
 
-class ChangeNameModal : public BaseIndexModal
+class ChangeNameModal : public BaseDualIndexModal
 {
 public:
 	ChangeNameModal();

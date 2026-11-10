@@ -4,7 +4,7 @@
 
 extern Game game;
 
-DeleteEntryModal::DeleteEntryModal() : BaseIndexModal("Delete Password")
+DeleteEntryModal::DeleteEntryModal() : BaseDualIndexModal("Delete Password")
 {
 }
 
@@ -14,11 +14,23 @@ void DeleteEntryModal::OnRender()
 	Text("Name:");
 	ImGui::SameLine();
 
-	auto& store = game.GetContentStore();
-	Text(store.GetName(selectedIndex));
+	if (!isLockIndex)
+	{
+		auto& store = game.GetContentStore();
+		Text(store.GetName(selectedIndex));
+	}
+	else
+	{
+		auto api = game.GetKeeper().GetDirectApi();
+		Text(api.GetHint(selectedIndex));
+	}
+
 	if (ImGui::Button("Yes"))
 	{
-		store.Remove(selectedIndex);
+		if (!isLockIndex)
+			game.GetContentStore().Remove(selectedIndex);
+		else
+			game.GetKeeper().RemoveHint(selectedIndex);
 		ImGui::CloseCurrentPopup();
 	}
 	ImGui::SameLine();
