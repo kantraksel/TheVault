@@ -1,7 +1,6 @@
 #pragma once
 #include "IRender.h"
 #include "Applets/IApplet.h"
-#include "Applets/WelcomeApplet.h"
 #include "Applets/MainApplet.h"
 #include "Applets/ProcessApplet.h"
 #include "Applets/ErrorApplet.h"
@@ -13,7 +12,6 @@ class MainWindow : public IRender
 private:
 	enum class RenderContent
 	{
-		Welcome,
 		GlobalProcess,
 		CriticalError,
 		MainView,
@@ -22,7 +20,6 @@ private:
 	RenderContent content;
 	IApplet* applet;
 
-	WelcomeApplet welcome;
 	MainApplet main;
 	ProcessApplet process;
 	ErrorApplet error;
@@ -44,10 +41,11 @@ public:
 	void Initialize();
 	void Render() override;
 
+	void CreateVault(const std::wstring& file);
+	void OpenVault(const std::wstring& file);
 	void SaveVault(bool closeVault = false, bool exitOnConfirm = false);
 	void CloseVault(bool exitOnConfirm = false);
 
-	void SwitchToWelcome();
 	void SwitchToMainView();
 
 	void ShowError(const std::string_view& text, bool critical);

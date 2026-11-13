@@ -9,9 +9,12 @@ extern Game game;
 
 MainWindow::MainWindow()
 {
-	content = RenderContent::Welcome;
+	content = RenderContent::MainView;
 	applet = nullptr;
-	SwitchToWelcome();
+
+	SwitchToMainView();
+	main.DisableInteractions();
+	main.GetWelcomeApplet().Open();
 }
 
 MainWindow::~MainWindow()
@@ -37,11 +40,6 @@ void MainWindow::SwitchApplet(RenderContent content, IApplet* applet)
 	this->content = content;
 	this->applet = applet;
 	applet->OnEnter();
-}
-
-void MainWindow::SwitchToWelcome()
-{
-	SwitchApplet(RenderContent::Welcome, &welcome);
 }
 
 void MainWindow::SwitchToGlobalProcess()
@@ -95,6 +93,16 @@ void MainWindow::Render()
 	scheduler.Run();
 }
 
+void MainWindow::CreateVault(const std::wstring& file)
+{
+	ProcessVaultTask(game.GetKeeper().CreateVault(file));
+}
+
+void MainWindow::OpenVault(const std::wstring& file)
+{
+	ProcessVaultTask(game.GetKeeper().OpenVault(file));
+}
+
 void MainWindow::SaveVault(bool closeVault, bool exitOnConfirm)
 {
 	ProcessVaultTask(game.GetKeeper().SaveVault(closeVault, false, exitOnConfirm), "Saving vault...");
@@ -123,7 +131,9 @@ uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
 	{
 		case TR_SwitchToWelcome:
 		{
-			SwitchToWelcome();
+			SwitchToMainView();
+			main.DisableInteractions();
+			main.GetWelcomeApplet().Open();
 			break;
 		}
 		case TR_SwitchToLogin:
@@ -177,9 +187,6 @@ void MainWindow::RenderAppletBar()
 
 	if (ImGui::BeginMenuBar())
 	{
-		if (ImGui::MenuItem("Welcome", nullptr, content == RenderContent::Welcome))
-			SwitchToWelcome();
-
 		if (ImGui::MenuItem("GlobalProcess", nullptr, content == RenderContent::GlobalProcess))
 			SwitchToGlobalProcess();
 

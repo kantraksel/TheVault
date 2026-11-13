@@ -1,12 +1,17 @@
 #pragma once
-#include "IApplet.h"
+#include <string>
 
-class WelcomeApplet : public IApplet
+class WelcomeApplet
 {
 private:
+	std::wstring name;
+	bool isOpen;
+
 public:
 	WelcomeApplet();
 	~WelcomeApplet();
 
-	void Render() override;
+	void Open();
+	void Close();
+	void Render();
 };
