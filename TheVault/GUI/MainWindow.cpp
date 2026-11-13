@@ -9,10 +9,6 @@ extern Game game;
 
 MainWindow::MainWindow()
 {
-	content = RenderContent::MainView;
-	applet = nullptr;
-
-	SwitchToMainView();
 	main.DisableInteractions();
 	main.GetWelcomeApplet().Open();
 }
@@ -23,29 +19,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::Initialize()
 {
-}
-
-void IApplet::OnEnter()
-{
-}
-
-void IApplet::OnLeave()
-{
-}
-
-void MainWindow::SwitchApplet(RenderContent content, IApplet* applet)
-{
-	if (this->applet)
-		this->applet->OnLeave();
-	this->content = content;
-	this->applet = applet;
-	applet->OnEnter();
-}
-
-void MainWindow::SwitchToMainView()
-{
-	SwitchApplet(RenderContent::MainView, &main);
-	main.EnableInteractions();
 }
 
 void MainWindow::ShowError(const std::string_view& text, bool critical)
@@ -67,7 +40,7 @@ void MainWindow::Render()
 	constexpr ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar;
 	if (ImGui::Begin("TheVault##MainWindow", nullptr, flags))
 	{
-		applet->Render();
+		main.Render();
 		modals.Render();
 		RenderAppletBar();
 	}
@@ -114,26 +87,24 @@ uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
 	{
 		case TR_SwitchToWelcome:
 		{
-			SwitchToMainView();
 			main.DisableInteractions();
 			main.GetWelcomeApplet().Open();
 			break;
 		}
 		case TR_SwitchToLogin:
 		{
-			SwitchToMainView();
 			main.DisableInteractions();
 			main.GetLoginApplet().Open();
 			break;
 		}
 		case TR_SwitchToMainView:
 		{
-			SwitchToMainView();
+			main.EnableInteractions();
 			break;
 		}
 		case TR_SwitchToLockSetup:
 		{
-			SwitchToMainView();
+			main.EnableInteractions();
 			main.GetLockApplet().Open();
 			break;
 		}
@@ -165,11 +136,13 @@ void MainWindow::RenderAppletBar()
 
 	if (ImGui::BeginMenuBar())
 	{
-		if (ImGui::MenuItem("MainView", nullptr, content == RenderContent::MainView))
-			SwitchToMainView();
+		if (ImGui::BeginMenu("Debug"))
+		{
+			if (ImGui::MenuItem("DemoWindow", nullptr, showDemoWindow))
+				showDemoWindow = !showDemoWindow;
 
-		if (ImGui::MenuItem("DemoWindow", nullptr, showDemoWindow))
-			showDemoWindow = !showDemoWindow;
+			ImGui::EndMenu();
+		}
 
 		ImGui::EndMenuBar();
 	}

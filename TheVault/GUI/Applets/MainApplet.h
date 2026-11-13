@@ -1,11 +1,10 @@
 #pragma once
-#include "IApplet.h"
 #include "LockApplet.h"
 #include "LoginApplet.h"
 #include "WelcomeApplet.h"
 #include "ProcessApplet.h"
 
-class MainApplet : public IApplet
+class MainApplet
 {
 private:
 	void RenderMenuBar();
@@ -17,7 +16,7 @@ private:
 	bool isDisabled = false;
 
 public:
-	void Render() override;
+	void Render();
 
 	void DisableInteractions();
 	void EnableInteractions();

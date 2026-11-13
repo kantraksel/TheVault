@@ -1,6 +1,5 @@
 #pragma once
 #include "IRender.h"
-#include "Applets/IApplet.h"
 #include "Applets/MainApplet.h"
 #include "Modals.hpp"
 #include "ReactiveScheduler.hpp"
@@ -8,21 +7,9 @@
 class MainWindow : public IRender
 {
 private:
-	enum class RenderContent
-	{
-		MainView,
-	};
-
-	RenderContent content;
-	IApplet* applet;
-
 	MainApplet main;
-
 	Modals modals;
-
 	ReactiveScheduler scheduler;
-
-	void SwitchApplet(RenderContent content, IApplet* applet);
 
 	void RenderAppletBar();
 
@@ -37,8 +24,6 @@ public:
 	void OpenVault(const std::wstring& file);
 	void SaveVault(bool closeVault = false, bool exitOnConfirm = false);
 	void CloseVault(bool exitOnConfirm = false);
-
-	void SwitchToMainView();
 
 	void ShowError(const std::string_view& text, bool critical);
 
