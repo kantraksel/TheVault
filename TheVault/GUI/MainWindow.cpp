@@ -42,11 +42,6 @@ void MainWindow::SwitchApplet(RenderContent content, IApplet* applet)
 	applet->OnEnter();
 }
 
-void MainWindow::SwitchToGlobalProcess()
-{
-	SwitchApplet(RenderContent::GlobalProcess, &process);
-}
-
 void MainWindow::SwitchToCriticalError()
 {
 	SwitchApplet(RenderContent::CriticalError, &error);
@@ -115,9 +110,8 @@ void MainWindow::CloseVault(bool exitOnConfirm)
 
 void MainWindow::ProcessVaultTask(std::future<uint64_t>&& task, const std::string_view& title)
 {
-	process.ProcessVaultTask(std::move(task));
-	process.SetTitle(title);
-	SwitchToGlobalProcess();
+	main.GetProcessApplet().Open(std::move(task), title);
+	main.DisableInteractions();
 }
 
 uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
@@ -187,9 +181,6 @@ void MainWindow::RenderAppletBar()
 
 	if (ImGui::BeginMenuBar())
 	{
-		if (ImGui::MenuItem("GlobalProcess", nullptr, content == RenderContent::GlobalProcess))
-			SwitchToGlobalProcess();
-
 		if (ImGui::MenuItem("MainView", nullptr, content == RenderContent::MainView))
 			SwitchToMainView();
 

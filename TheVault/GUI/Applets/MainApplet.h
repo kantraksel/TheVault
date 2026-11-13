@@ -3,6 +3,7 @@
 #include "LockApplet.h"
 #include "LoginApplet.h"
 #include "WelcomeApplet.h"
+#include "ProcessApplet.h"
 
 class MainApplet : public IApplet
 {
@@ -12,6 +13,7 @@ private:
 	LockApplet lockApplet;
 	LoginApplet loginApplet;
 	WelcomeApplet welcomeApplet;
+	ProcessApplet processApplet;
 	bool isDisabled = false;
 
 public:
@@ -33,5 +35,10 @@ public:
 	auto& GetWelcomeApplet()
 	{
 		return welcomeApplet;
+	}
+
+	auto& GetProcessApplet()
+	{
+		return processApplet;
 	}
 };

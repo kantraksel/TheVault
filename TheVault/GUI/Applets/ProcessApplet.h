@@ -1,18 +1,19 @@
 #pragma once
 #include <future>
-#include "IApplet.h"
+#include <string>
 
-class ProcessApplet : public IApplet
+class ProcessApplet
 {
 private:
 	std::future<uint64_t> vaultTask;
 	std::string title;
+	bool isOpen;
 
 public:
 	ProcessApplet();
 	~ProcessApplet();
 
-	void Render() override;
-	void ProcessVaultTask(std::future<uint64_t>&& task);
-	void SetTitle(const std::string_view& title);
+	void Open(std::future<uint64_t>&& task, const std::string_view& title);
+	void Close();
+	void Render();
 };

@@ -118,6 +118,7 @@ void MainApplet::Render()
 	lockApplet.Render();
 	loginApplet.Render();
 	welcomeApplet.Render();
+	processApplet.Render();
 }
 
 void MainApplet::RenderMenuBar()
