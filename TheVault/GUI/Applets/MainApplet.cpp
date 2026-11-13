@@ -11,6 +11,12 @@ extern Game game;
 
 void MainApplet::Render()
 {
+	bool hasDisabledStarted = false;
+	if (isDisabled)
+	{
+		hasDisabledStarted = true;
+		ImGui::BeginDisabled();
+	}
 	RenderMenuBar();
 	ProcessShortcuts();
 
@@ -106,8 +112,11 @@ void MainApplet::Render()
 
 		ImGui::EndTable();
 	}
+	if (hasDisabledStarted)
+		ImGui::EndDisabled();
 
 	lockApplet.Render();
+	loginApplet.Render();
 }
 
 void MainApplet::RenderMenuBar()
@@ -174,4 +183,14 @@ void MainApplet::ProcessShortcuts()
 
 	if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
 		game.GetMainWindow().SaveVault();
+}
+
+void MainApplet::DisableInteractions()
+{
+	isDisabled = true;
+}
+
+void MainApplet::EnableInteractions()
+{
+	isDisabled = false;
 }

@@ -34,7 +34,7 @@ public:
 	Future SaveVault(bool close = false, bool ignoreChecks = false, bool closeApp = false);
 
 	void GetLastHint(std::string& str);
-	Future SubmitPassword(const SecureArray& password);
+	Future SubmitPassword(const std::string_view& password);
 
 	struct DirectApi
 	{

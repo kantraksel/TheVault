@@ -1,42 +1,45 @@
 #include "Utils/ImGuiUtils.h"
 #include "LoginApplet.h"
 #include "App/Game.h"
-#include "Vault/Crypto.h"
 
 extern Game game;
 
-LoginApplet::LoginApplet() : firstFrameDraw{}
+LoginApplet::LoginApplet() : isOpen{false}, firstFrameDraw{false}
 {
-	hint.reserve(256);
+	passwordInput.resize(256);
 }
 
 LoginApplet::~LoginApplet()
 {
 }
 
-void LoginApplet::Initialize()
+void LoginApplet::Open()
 {
-	passwordInput = SecureArray(256);
-	Crypto::ZeroMemory(passwordInput);
-}
-
-void LoginApplet::OnEnter()
-{
+	isOpen = true;
 	firstFrameDraw = true;
+	RefreshHintName();
 }
 
-void LoginApplet::OnLeave()
+void LoginApplet::Close()
 {
+	isOpen = false;
 	hint.clear();
-	Crypto::ZeroMemory(passwordInput);
+	memset(passwordInput.data(), 0, passwordInput.size());
+	vaultTask = {};
 }
 
 void LoginApplet::Render()
 {
-	BeginVisibleChildWindow("##Login", ImVec2(350, 0));
+	if (!isOpen)
+		return;
+	bool isWindowOpen = isOpen;
 
-	Text("Enter password matching the hint:");
-	ImGui::Separator();
+	ImGui::SetNextWindowSize(ImVec2(350, 0));
+	CenterNextWindow();
+	if (!ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup))
+		ImGui::SetNextWindowFocus();
+	ImGui::Begin("Enter password matching the hint:##Login", &isWindowOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
 	Text(hint);
 
 	if (!vaultTask.valid())
@@ -48,12 +51,16 @@ void LoginApplet::Render()
 
 		SetNextRightButtonAlign("Unlock");
 		constexpr auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
-		bool submit = ImGui::InputText("##Password", reinterpret_cast<char*>(passwordInput.data()), passwordInput.size(), flags);
+		bool submit = ImGui::InputText("##Password", passwordInput.data(), passwordInput.size() - 1, flags);
 		ImGui::SameLine();
 		if (ImGui::Button("Unlock") || submit)
 		{
-			vaultTask = game.GetKeeper().SubmitPassword(passwordInput);
-			Crypto::ZeroMemory(passwordInput);
+			auto password = std::string_view(passwordInput.data());
+			if (!password.empty())
+			{
+				vaultTask = game.GetKeeper().SubmitPassword(password);
+				memset(passwordInput.data(), 0, passwordInput.size());
+			}
 		}
 
 		ImGui::EndGroup();
@@ -61,11 +68,21 @@ void LoginApplet::Render()
 	else
 	{
 		ImGui::ProgressBar(-1.0f * static_cast<float>(ImGui::GetTime()), ImVec2(-FLT_MIN, 0), "Decrypting...");
-		game.GetMainWindow().ProcessVaultResponse(vaultTask);
+		auto result = game.GetMainWindow().ProcessVaultResponse(vaultTask);
+		if (result != MainWindow::_TR_NoAction && result != MainWindow::TR_Failed && result != MainWindow::TR_SwitchToLogin && result != MainWindow::TR_FetchNextHint)
+			Close();
 	}
 
-	ImGui::EndChild();
-	firstFrameDraw = false;
+	ImGui::End();
+
+	if (firstFrameDraw)
+		firstFrameDraw = false;
+
+	if (!isWindowOpen)
+	{
+		Close();
+		game.GetMainWindow().CloseVault();
+	}
 }
 
 void LoginApplet::RefreshHintName()

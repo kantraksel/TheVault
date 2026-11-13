@@ -20,7 +20,6 @@ MainWindow::~MainWindow()
 
 void MainWindow::Initialize()
 {
-	login.Initialize();
 }
 
 void IApplet::OnEnter()
@@ -55,14 +54,10 @@ void MainWindow::SwitchToCriticalError()
 	SwitchApplet(RenderContent::CriticalError, &error);
 }
 
-void MainWindow::SwitchToLoginChallenge()
-{
-	SwitchApplet(RenderContent::LoginChallenge, &login);
-}
-
 void MainWindow::SwitchToMainView()
 {
 	SwitchApplet(RenderContent::MainView, &main);
+	main.EnableInteractions();
 }
 
 void MainWindow::ShowError(const std::string_view& text, bool critical)
@@ -133,8 +128,9 @@ uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
 		}
 		case TR_SwitchToLogin:
 		{
-			SwitchToLoginChallenge();
-			login.RefreshHintName();
+			SwitchToMainView();
+			main.DisableInteractions();
+			main.GetLoginApplet().Open();
 			break;
 		}
 		case TR_SwitchToMainView:
@@ -150,7 +146,7 @@ uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
 		}
 		case TR_FetchNextHint:
 		{
-			login.RefreshHintName();
+			main.GetLoginApplet().RefreshHintName();
 			break;
 		}
 		case TR_CriticalError:
@@ -186,9 +182,6 @@ void MainWindow::RenderAppletBar()
 
 		if (ImGui::MenuItem("GlobalProcess", nullptr, content == RenderContent::GlobalProcess))
 			SwitchToGlobalProcess();
-
-		if (ImGui::MenuItem("LoginChallenge", nullptr, content == RenderContent::LoginChallenge))
-			SwitchToLoginChallenge();
 
 		if (ImGui::MenuItem("MainView", nullptr, content == RenderContent::MainView))
 			SwitchToMainView();

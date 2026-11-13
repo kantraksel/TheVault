@@ -2,7 +2,6 @@
 #include "IRender.h"
 #include "Applets/IApplet.h"
 #include "Applets/WelcomeApplet.h"
-#include "Applets/LoginApplet.h"
 #include "Applets/MainApplet.h"
 #include "Applets/ProcessApplet.h"
 #include "Applets/ErrorApplet.h"
@@ -17,7 +16,6 @@ private:
 		Welcome,
 		GlobalProcess,
 		CriticalError,
-		LoginChallenge,
 		MainView,
 	};
 
@@ -25,7 +23,6 @@ private:
 	IApplet* applet;
 
 	WelcomeApplet welcome;
-	LoginApplet login;
 	MainApplet main;
 	ProcessApplet process;
 	ErrorApplet error;
@@ -51,7 +48,6 @@ public:
 	void CloseVault(bool exitOnConfirm = false);
 
 	void SwitchToWelcome();
-	void SwitchToLoginChallenge();
 	void SwitchToMainView();
 
 	void ShowError(const std::string_view& text, bool critical);

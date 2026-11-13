@@ -1,24 +1,27 @@
 #pragma once
 #include <string>
 #include <future>
-#include "Utils/SecureArray.h"
-#include "IApplet.h"
 
-class LoginApplet : public IApplet
+class LoginApplet
 {
-private:
-	SecureArray passwordInput;
+protected:
+	std::string passwordInput;
 	std::string hint;
 	std::future<uint64_t> vaultTask;
+	bool isOpen;
 	bool firstFrameDraw;
 
 public:
 	LoginApplet();
 	~LoginApplet();
 
-	void Initialize();
-	void OnEnter() override;
-	void OnLeave() override;
-	void Render() override;
+	void Open();
+	void Close();
+	void Render();
 	void RefreshHintName();
+
+	bool IsOpen()
+	{
+		return isOpen;
+	}
 };

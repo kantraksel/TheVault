@@ -111,12 +111,11 @@ void VaultKeeper::GetLastHint(std::string& str)
 		str = mChain.back().hint;
 }
 
-Future VaultKeeper::SubmitPassword(const SecureArray& password)
+Future VaultKeeper::SubmitPassword(const std::string_view& password)
 {
 	return game.GetWorker().SendCmd([this](const SecureArray& password) -> uint64_t
 		{
-			auto size = strnlen_s(reinterpret_cast<const char*>(password.data()), password.size());
-			auto pass = std::string_view(reinterpret_cast<const char*>(password.data()), size);
+			auto pass = std::string_view(reinterpret_cast<const char*>(password.data()), password.size());
 			if (pass.empty())
 				return TaskRet::TR_Failed;
 
@@ -165,7 +164,7 @@ Future VaultKeeper::SubmitPassword(const SecureArray& password)
 					.hint = std::string(reinterpret_cast<const char*>(hint.data()), hint.size()),
 				});
 			return TaskRet::TR_FetchNextHint;
-		}, password);
+		}, SecureArray::CreateRef(password.data(), password.size()));
 }
 
 int VaultKeeper::AddHint(const std::string_view& hint)
