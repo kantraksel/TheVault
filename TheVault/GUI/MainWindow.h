@@ -2,7 +2,6 @@
 #include "IRender.h"
 #include "Applets/IApplet.h"
 #include "Applets/MainApplet.h"
-#include "Applets/ErrorApplet.h"
 #include "Modals.hpp"
 #include "ReactiveScheduler.hpp"
 
@@ -11,7 +10,6 @@ class MainWindow : public IRender
 private:
 	enum class RenderContent
 	{
-		CriticalError,
 		MainView,
 	};
 
@@ -19,14 +17,12 @@ private:
 	IApplet* applet;
 
 	MainApplet main;
-	ErrorApplet error;
 
 	Modals modals;
 
 	ReactiveScheduler scheduler;
 
 	void SwitchApplet(RenderContent content, IApplet* applet);
-	void SwitchToCriticalError();
 
 	void RenderAppletBar();
 

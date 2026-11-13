@@ -10,7 +10,6 @@ add_executable(TheVault WIN32
 			Vault/WorkerThread.cpp
 			GUI/GUIManager.cpp
 			GUI/MainWindow.cpp
-			GUI/Applets/ErrorApplet.cpp
 			GUI/Applets/LockApplet.cpp
 			GUI/Applets/LoginApplet.cpp
 			GUI/Applets/MainApplet.cpp

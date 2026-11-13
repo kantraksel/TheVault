@@ -42,11 +42,6 @@ void MainWindow::SwitchApplet(RenderContent content, IApplet* applet)
 	applet->OnEnter();
 }
 
-void MainWindow::SwitchToCriticalError()
-{
-	SwitchApplet(RenderContent::CriticalError, &error);
-}
-
 void MainWindow::SwitchToMainView()
 {
 	SwitchApplet(RenderContent::MainView, &main);
@@ -56,15 +51,9 @@ void MainWindow::SwitchToMainView()
 void MainWindow::ShowError(const std::string_view& text, bool critical)
 {
 	std::string message(text);
-	scheduler.Schedule([=, this]()
+	scheduler.Schedule([=]()
 	{
-		if (critical)
-		{
-			error.SetError(message);
-			SwitchToCriticalError();
-		}
-		else
-			Modals::GetErrorModal().Open(message);
+		Modals::GetErrorModal().Open(message, critical);
 		return true;
 	});
 }
@@ -151,11 +140,6 @@ uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
 		case TR_FetchNextHint:
 		{
 			main.GetLoginApplet().RefreshHintName();
-			break;
-		}
-		case TR_CriticalError:
-		{
-			SwitchToCriticalError();
 			break;
 		}
 		case TR_CloseVault:
