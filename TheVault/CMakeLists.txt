@@ -32,6 +32,7 @@ add_executable(TheVault WIN32
 			GUI/Modals/ChangeLockPasswordModal.cpp
 			GUI/Modals.cpp
 			GUI/ReactiveScheduler.cpp
+			GUI/VaultCommander.cpp
 )
 target_include_directories(TheVault PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(TheVault PRIVATE

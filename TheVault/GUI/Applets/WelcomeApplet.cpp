@@ -35,13 +35,13 @@ void WelcomeApplet::Render()
 
 	if (ImGui::Button("Open existing vault") && WinApi::OpenFileDialog(L"Open existing vault", L"vault.bin", name))
 	{
-		game.GetMainWindow().OpenVault(name);
+		game.GetVaultCommander().OpenVault(name);
 		Close();
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Create new vault") && WinApi::SaveFileDialog(L"Create new vault", L"vault.bin", name))
 	{
-		game.GetMainWindow().CreateVault(name);
+		game.GetVaultCommander().CreateVault(name);
 		Close();
 	}
 

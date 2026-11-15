@@ -2,6 +2,7 @@
 #include "Engine/IGame.h"
 #include "GUI/GUIManager.h"
 #include "GUI/MainWindow.h"
+#include "GUI/VaultCommander.hpp"
 #include "Vault/Vault.h"
 #include "Vault/VaultKeeper.h"
 #include "Vault/WorkerThread.h"
@@ -13,6 +14,7 @@ class Game : public IGame
 private:
 	GUIManager gui;
 	MainWindow mainWnd;
+	VaultCommander vaultCommander;
 	Vault vault;
 	VaultKeeper keeper;
 	WorkerThread worker;
@@ -29,6 +31,7 @@ public:
 	bool OnShutdown() override;
 
 	auto& GetMainWindow() { return mainWnd; }
+	auto& GetVaultCommander() { return vaultCommander; }
 	auto& GetVault() { return vault; }
 	auto& GetKeeper() { return keeper; }
 	auto& GetWorker() { return worker; }

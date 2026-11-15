@@ -33,7 +33,6 @@ bool Game::OnInitialize()
 		return false;
 
 	gui.RegisterObject(&mainWnd);
-	mainWnd.Initialize();
 	worker.Init();
 	return true;
 }

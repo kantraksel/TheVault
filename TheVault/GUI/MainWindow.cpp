@@ -1,9 +1,6 @@
-#include <chrono>
-#include "Utils/ImGuiUtils.h"
 #include "MainWindow.h"
-#include "Engine/Logger.h"
+#include "Utils/ImGuiUtils.h"
 #include "App/Game.h"
-#include "Engine/GhostFries.h"
 
 extern Game game;
 
@@ -15,20 +12,6 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
-}
-
-void MainWindow::Initialize()
-{
-}
-
-void MainWindow::ShowError(const std::string_view& text, bool critical)
-{
-	std::string message(text);
-	scheduler.Schedule([=]()
-	{
-		Modals::GetErrorModal().Open(message, critical);
-		return true;
-	});
 }
 
 void MainWindow::Render()
@@ -47,84 +30,7 @@ void MainWindow::Render()
 	
 	ImGui::End();
 
-	scheduler.Run();
-}
-
-void MainWindow::CreateVault(const std::wstring& file)
-{
-	ProcessVaultTask(game.GetKeeper().CreateVault(file));
-}
-
-void MainWindow::OpenVault(const std::wstring& file)
-{
-	ProcessVaultTask(game.GetKeeper().OpenVault(file));
-}
-
-void MainWindow::SaveVault(bool closeVault, bool exitOnConfirm)
-{
-	ProcessVaultTask(game.GetKeeper().SaveVault(closeVault, false, exitOnConfirm), "Saving vault...");
-}
-
-void MainWindow::CloseVault(bool exitOnConfirm)
-{
-	ProcessVaultTask(game.GetKeeper().CloseVault(exitOnConfirm), "Closing vault...");
-}
-
-void MainWindow::ProcessVaultTask(std::future<uint64_t>&& task, const std::string_view& title)
-{
-	main.GetProcessApplet().Open(std::move(task), title);
-	main.DisableInteractions();
-}
-
-uint64_t MainWindow::ProcessVaultResponse(std::future<uint64_t>& task)
-{
-	using namespace std::chrono_literals;
-	if (!task.valid() || task.wait_for(0s) != std::future_status::ready)
-		return _TR_NoAction;
-
-	auto value = task.get();
-	switch (value)
-	{
-		case TR_SwitchToWelcome:
-		{
-			main.DisableInteractions();
-			main.GetWelcomeApplet().Open();
-			break;
-		}
-		case TR_SwitchToLogin:
-		{
-			main.DisableInteractions();
-			main.GetLoginApplet().Open();
-			break;
-		}
-		case TR_SwitchToMainView:
-		{
-			main.EnableInteractions();
-			break;
-		}
-		case TR_SwitchToLockSetup:
-		{
-			main.EnableInteractions();
-			main.GetLockApplet().Open();
-			break;
-		}
-		case TR_FetchNextHint:
-		{
-			main.GetLoginApplet().RefreshHintName();
-			break;
-		}
-		case TR_CloseVault:
-		{
-			ProcessVaultTask(game.GetKeeper().CloseVault(), "Closing vault...");
-			break;
-		}
-		case TR_CloseApp:
-		{
-			GhostFries::Quit();
-			break;
-		}
-	}
-	return value;
+	game.GetVaultCommander().Update();
 }
 
 void MainWindow::RenderAppletBar()

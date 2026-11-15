@@ -5,9 +5,15 @@
 
 extern Game game;
 
-ChangeLockPasswordModal::ChangeLockPasswordModal() : BaseIndexModal("Change Password##ChangeLockPassword")
+ChangeLockPasswordModal::ChangeLockPasswordModal() : BaseIndexModal("Change Password##ChangeLockPassword"), isProcessing{false}
 {
 	pwdInput.resize(256);
+}
+
+void ChangeLockPasswordModal::OnClose()
+{
+	memset(pwdInput.data(), 0, pwdInput.size());
+	isProcessing = false;
 }
 
 void ChangeLockPasswordModal::OnRender()
@@ -21,7 +27,7 @@ void ChangeLockPasswordModal::OnRender()
 		Text(api.GetHint(selectedIndex));
 	}
 
-	if (!vaultTask.valid())
+	if (!isProcessing)
 	{
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 		if (firstFrameDraw)
@@ -35,7 +41,11 @@ void ChangeLockPasswordModal::OnRender()
 			auto pwd = std::string_view(pwdInput.data());
 			if (!pwd.empty())
 			{
-				vaultTask = keeper.SetHintKey(selectedIndex, pwd);
+				isProcessing = true;
+				game.GetVaultCommander().SetPassword(selectedIndex, pwd, [this](uint64_t)
+						{
+							Close();
+						});
 				memset(pwdInput.data(), 0, pwdInput.size());
 			}
 		}
@@ -43,21 +53,15 @@ void ChangeLockPasswordModal::OnRender()
 		ImGui::SameLine();
 		if (ImGui::Button("Change Name"))
 		{
-			memset(pwdInput.data(), 0, pwdInput.size());
-			ImGui::CloseCurrentPopup();
+			Close();
 			Modals::GetChangeNameModal().Open(selectedIndex, true);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel"))
-		{
-			memset(pwdInput.data(), 0, pwdInput.size());
-			ImGui::CloseCurrentPopup();
-		}
+			Close();
 	}
 	else
 	{
 		ImGui::ProgressBar(-1.0f * static_cast<float>(ImGui::GetTime()), ImVec2(-FLT_MIN, 0), "Hashing...");
-		if (game.GetMainWindow().ProcessVaultResponse(vaultTask) != MainWindow::_TR_NoAction)
-			ImGui::CloseCurrentPopup();
 	}
 }

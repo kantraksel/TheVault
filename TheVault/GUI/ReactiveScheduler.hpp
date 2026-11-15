@@ -1,5 +1,6 @@
 #pragma once
 #include <future>
+#include "Engine/Logger.h"
 #include "Utility/Function.h"
 
 class ReactiveScheduler
@@ -19,8 +20,7 @@ public:
 	void Schedule(std::future<T>&& future, const Function<void(const T&)>& resolveCallback, const Function<void(const std::exception&)>& rejectCallback)
 	{
 		auto futurePtr = std::make_shared<std::future<T>>(std::move(future));
-		std::lock_guard lock(taskMutex);
-		tasks.push_back([=]()
+		Schedule([=]()
 			{
 				auto& future = *futurePtr;
 				auto status = future.wait_for(std::chrono::seconds(0));
@@ -33,14 +33,24 @@ public:
 						{
 							resolveCallback(response);
 						}
-						catch (...)
+						catch (const std::exception& e)
 						{
+							Logger::LogError("Exception in resolve callback: {}", e.what());
 						}
 					}
 					catch (const std::exception& e)
 					{
-						if (rejectCallback)
-							rejectCallback(e);
+						try
+						{
+							if (rejectCallback)
+								rejectCallback(e);
+							else
+								Logger::LogError("Unhandled rejection: {}", e.what());
+						}
+						catch (const std::exception& e)
+						{
+							Logger::LogError("Exception in reject callback: {}", e.what());
+						}
 					}
 					return true;
 				}

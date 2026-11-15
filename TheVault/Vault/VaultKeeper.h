@@ -23,6 +23,7 @@ private:
 	std::wstring file; //used only in the thread
 
 	void ResetState();
+	uint64_t RaiseError(const std::string_view& msg, bool critical = false);
 
 public:
 	VaultKeeper();
@@ -30,8 +31,8 @@ public:
 
 	Future OpenVault(const std::wstring& file);
 	Future CreateVault(const std::wstring& file);
-	Future CloseVault(bool closeApp = false);
-	Future SaveVault(bool close = false, bool ignoreChecks = false, bool closeApp = false);
+	Future CloseVault();
+	Future SaveVault();
 
 	void GetLastHint(std::string& str);
 	Future SubmitPassword(const std::string_view& password);
@@ -51,6 +52,11 @@ public:
 	void RemoveHint(int i);
 	Future SetHintKey(int i, const std::string_view& password);
 	void ChangeHint(int i, const std::string_view& hint);
-	
-	uint64_t RaiseError(const std::string_view& msg, bool critical = false);
+
+	enum ReturnValue
+	{
+		Failed,
+		Success,
+		UnlockRequired,
+	};
 };

@@ -4,7 +4,7 @@
 
 extern Game game;
 
-LoginApplet::LoginApplet() : isOpen{false}, firstFrameDraw{false}
+LoginApplet::LoginApplet() : isOpen{false}, firstFrameDraw{false}, isProcessing{false}
 {
 	passwordInput.resize(256);
 }
@@ -17,6 +17,7 @@ void LoginApplet::Open()
 {
 	isOpen = true;
 	firstFrameDraw = true;
+	isProcessing = false;
 	RefreshHintName();
 }
 
@@ -25,7 +26,6 @@ void LoginApplet::Close()
 	isOpen = false;
 	hint.clear();
 	memset(passwordInput.data(), 0, passwordInput.size());
-	vaultTask = {};
 }
 
 void LoginApplet::Render()
@@ -42,7 +42,7 @@ void LoginApplet::Render()
 
 	Text(hint);
 
-	if (!vaultTask.valid())
+	if (!isProcessing)
 	{
 		ImGui::BeginGroup();
 
@@ -58,7 +58,39 @@ void LoginApplet::Render()
 			auto password = std::string_view(passwordInput.data());
 			if (!password.empty())
 			{
-				vaultTask = game.GetKeeper().SubmitPassword(password);
+				isProcessing = true;
+				game.GetVaultCommander().SubmitPassword(password, [this](uint64_t result)
+					{
+						switch (result)
+						{
+							case VaultKeeper::Failed:
+							{
+								isProcessing = false;
+								break;
+							}
+
+							case VaultKeeper::Success:
+							{
+								Close();
+								game.GetMainWindow().GetMainApplet().EnableInteractions();
+								break;
+							}
+
+							case VaultKeeper::UnlockRequired:
+							{
+								Close();
+								Open();
+								break;
+							}
+
+							default:
+							{
+								auto message = std::format("Unknown result code {} returned by SaveVault", result);
+								Modals::GetErrorModal().Open(message, true);
+								break;
+							}
+						}
+					});
 				memset(passwordInput.data(), 0, passwordInput.size());
 			}
 		}
@@ -68,9 +100,6 @@ void LoginApplet::Render()
 	else
 	{
 		ImGui::ProgressBar(-1.0f * static_cast<float>(ImGui::GetTime()), ImVec2(-FLT_MIN, 0), "Decrypting...");
-		auto result = game.GetMainWindow().ProcessVaultResponse(vaultTask);
-		if (result != MainWindow::_TR_NoAction && result != MainWindow::TR_Failed && result != MainWindow::TR_SwitchToLogin && result != MainWindow::TR_FetchNextHint)
-			Close();
 	}
 
 	ImGui::End();
@@ -81,7 +110,7 @@ void LoginApplet::Render()
 	if (!isWindowOpen)
 	{
 		Close();
-		game.GetMainWindow().CloseVault();
+		game.GetVaultCommander().CloseVault();
 	}
 }
 

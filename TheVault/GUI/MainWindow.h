@@ -2,14 +2,12 @@
 #include "IRender.h"
 #include "Applets/MainApplet.h"
 #include "Modals.hpp"
-#include "ReactiveScheduler.hpp"
 
 class MainWindow : public IRender
 {
 private:
 	MainApplet main;
 	Modals modals;
-	ReactiveScheduler scheduler;
 
 	void RenderAppletBar();
 
@@ -17,33 +15,12 @@ public:
 	MainWindow();
 	~MainWindow();
 
-	void Initialize();
 	void Render() override;
 
-	void CreateVault(const std::wstring& file);
-	void OpenVault(const std::wstring& file);
-	void SaveVault(bool closeVault = false, bool exitOnConfirm = false);
-	void CloseVault(bool exitOnConfirm = false);
-
-	void ShowError(const std::string_view& text, bool critical);
-
-	void ProcessVaultTask(std::future<uint64_t>&& task, const std::string_view& title = {});
-	uint64_t ProcessVaultResponse(std::future<uint64_t>& task);
-
-	enum TaskRet
+	auto& GetMainApplet()
 	{
-		TR_Failed,
-		TR_Success,
-		_TR_NoAction, // reserved for MainWindow
-		TR_SwitchToWelcome,
-		TR_SwitchToLogin,
-		TR_SwitchToMainView,
-		TR_SwitchToLockSetup,
-		TR_FetchNextHint,
-		TR_CriticalError,
-		TR_CloseVault,
-		TR_CloseApp,
-	};
+		return main;
+	}
 
 	auto& GetModals()
 	{

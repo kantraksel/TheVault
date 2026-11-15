@@ -4,10 +4,17 @@
 
 extern Game game;
 
-AddLockModal::AddLockModal() : BaseModal("New Vault Lock")
+AddLockModal::AddLockModal() : BaseModal("New Vault Lock"), isProcessing{false}
 {
 	nameInput.resize(256);
 	pwdInput.resize(256);
+}
+
+void AddLockModal::OnClose()
+{
+	memset(nameInput.data(), 0, nameInput.size());
+	memset(pwdInput.data(), 0, pwdInput.size());
+	isProcessing = false;
 }
 
 void AddLockModal::OnRender()
@@ -20,7 +27,7 @@ void AddLockModal::OnRender()
 	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 	bool submit = ImGui::InputText("##Name", nameInput.data(), nameInput.size() - 1, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoUndoRedo);
 
-	if (!vaultTask.valid())
+	if (!isProcessing)
 	{
 		TextWidget("Value:");
 		ImGui::SameLine();
@@ -39,25 +46,23 @@ void AddLockModal::OnRender()
 
 				if (!pwd.empty())
 				{
-					vaultTask = keeper.SetHintKey(index, pwd);
+					isProcessing = true;
+					game.GetVaultCommander().SetPassword(index, pwd, [this](uint64_t)
+						{
+							Close();
+						});
 					memset(pwdInput.data(), 0, pwdInput.size());
 				}
 				else
-					ImGui::CloseCurrentPopup();
+					Close();
 			}
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel"))
-		{
-			memset(nameInput.data(), 0, nameInput.size());
-			memset(pwdInput.data(), 0, pwdInput.size());
-			ImGui::CloseCurrentPopup();
-		}
+			Close();
 	}
 	else
 	{
 		ImGui::ProgressBar(-1.0f * static_cast<float>(ImGui::GetTime()), ImVec2(-FLT_MIN, 0), "Hashing...");
-		if (game.GetMainWindow().ProcessVaultResponse(vaultTask) != MainWindow::_TR_NoAction)
-			ImGui::CloseCurrentPopup();
 	}
 }

@@ -138,13 +138,13 @@ void MainApplet::RenderMenuBar()
 			}
 
 			if (ImGui::MenuItem("Save", "Ctrl+S"))
-				game.GetMainWindow().SaveVault();
+				game.GetVaultCommander().SaveVault();
 			if (ImGui::MenuItem("Close"))
 			{
 				if (game.GetUnsavedState().HasChanged())
 					Modals::GetConfirmExitModal().Open();
 				else
-					game.GetMainWindow().CloseVault();
+					game.GetVaultCommander().CloseVault();
 			}
 
 			ImGui::Separator();
@@ -184,7 +184,7 @@ void MainApplet::ProcessShortcuts()
 	}
 
 	if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
-		game.GetMainWindow().SaveVault();
+		game.GetVaultCommander().SaveVault();
 }
 
 void MainApplet::DisableInteractions()

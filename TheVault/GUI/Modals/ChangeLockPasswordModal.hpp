@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <future>
 #include "BaseIndexModal.hpp"
 
 class ChangeLockPasswordModal : public BaseIndexModal
@@ -10,7 +9,8 @@ public:
 
 protected:
 	void OnRender() override;
+	void OnClose() override;
 
 	std::string pwdInput;
-	std::future<uint64_t> vaultTask;
+	bool isProcessing;
 };

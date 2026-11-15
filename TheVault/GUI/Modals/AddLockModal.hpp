@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <future>
 #include "BaseModal.hpp"
 
 class AddLockModal : public BaseModal
@@ -10,8 +9,9 @@ public:
 
 protected:
 	void OnRender() override;
+	void OnClose() override;
 
 	std::string nameInput;
 	std::string pwdInput;
-	std::future<uint64_t> vaultTask;
+	bool isProcessing;
 };
