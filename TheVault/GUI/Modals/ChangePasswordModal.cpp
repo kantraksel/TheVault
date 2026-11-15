@@ -10,6 +10,11 @@ ChangePasswordModal::ChangePasswordModal() : BaseIndexModal("Change Password")
 	pwdInput.resize(256);
 }
 
+void ChangePasswordModal::OnClose()
+{
+	memset(pwdInput.data(), 0, pwdInput.size());
+}
+
 void ChangePasswordModal::OnRender()
 {
 	auto& store = game.GetContentStore();
@@ -29,21 +34,16 @@ void ChangePasswordModal::OnRender()
 		if (!pwd.empty())
 		{
 			store.SetText(selectedIndex, pwd);
-			memset(pwdInput.data(), 0, pwdInput.size());
-			ImGui::CloseCurrentPopup();
+			Close();
 		}
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Change Name"))
 	{
-		memset(pwdInput.data(), 0, pwdInput.size());
-		ImGui::CloseCurrentPopup();
+		Close();
 		Modals::GetChangeNameModal().Open(selectedIndex);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel"))
-	{
-		memset(pwdInput.data(), 0, pwdInput.size());
-		ImGui::CloseCurrentPopup();
-	}
+		Close();
 }

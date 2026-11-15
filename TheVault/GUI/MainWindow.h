@@ -1,25 +1,52 @@
 #pragma once
 #include "IRender.h"
-#include "Applets/MainApplet.h"
+#include "Applets/LockApplet.h"
+#include "Applets/LoginApplet.h"
+#include "Applets/WelcomeApplet.h"
+#include "Applets/ProcessApplet.h"
 #include "Modals.hpp"
 
 class MainWindow : public IRender
 {
 private:
-	MainApplet main;
+	LockApplet lockApplet;
+	LoginApplet loginApplet;
+	WelcomeApplet welcomeApplet;
+	ProcessApplet processApplet;
 	Modals modals;
+	bool isDisabled;
 
-	void RenderAppletBar();
+	void RenderMainArea();
+	void RenderMenuBar();
+	void ProcessShortcuts();
+	void RenderDemoBar();
 
 public:
 	MainWindow();
 	~MainWindow();
 
 	void Render() override;
+	void DisableInteractions();
+	void EnableInteractions();
 
-	auto& GetMainApplet()
+	auto& GetLockApplet()
 	{
-		return main;
+		return lockApplet;
+	}
+
+	auto& GetLoginApplet()
+	{
+		return loginApplet;
+	}
+
+	auto& GetWelcomeApplet()
+	{
+		return welcomeApplet;
+	}
+
+	auto& GetProcessApplet()
+	{
+		return processApplet;
 	}
 
 	auto& GetModals()

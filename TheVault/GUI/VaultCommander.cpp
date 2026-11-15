@@ -32,7 +32,7 @@ void VaultCommander::CreateVault(const std::wstring& file)
 				[](uint64_t)
 				{
 					game.GetUnsavedState().NotifyChange();
-					game.GetMainWindow().GetMainApplet().GetLockApplet().Open();
+					game.GetMainWindow().GetLockApplet().Open();
 				});
 		});
 }
@@ -42,7 +42,7 @@ void VaultCommander::OpenVault(const std::wstring& file)
 	ProcessVaultTask(game.GetKeeper().OpenVault(file),
 		[](uint64_t result)
 		{
-			auto& main = game.GetMainWindow().GetMainApplet();
+			auto& main = game.GetMainWindow();
 			switch (result)
 			{
 				case VaultKeeper::Failed:
@@ -100,7 +100,7 @@ void VaultCommander::SaveVault(bool closeVault, bool exitApp)
 			{
 				case VaultKeeper::Failed:
 				{
-					game.GetMainWindow().GetMainApplet().GetLockApplet().Open();
+					game.GetMainWindow().GetLockApplet().Open();
 					break;
 				}
 
@@ -127,7 +127,7 @@ void VaultCommander::CloseVault(bool exitApp)
 	ProcessVaultTask(game.GetKeeper().CloseVault(),
 		[=](uint64_t)
 		{
-			auto& main = game.GetMainWindow().GetMainApplet();
+			auto& main = game.GetMainWindow();
 			main.GetWelcomeApplet().Open();
 			main.DisableInteractions();
 			if (exitApp)
@@ -158,13 +158,13 @@ void VaultCommander::SetPassword(int i, const std::string_view& password, const 
 
 void VaultCommander::ProcessVaultTask(std::future<uint64_t>&& task, const Function<void(uint64_t)>& resolveCallback, const std::string_view& title)
 {
-	auto& main = game.GetMainWindow().GetMainApplet();
+	auto& main = game.GetMainWindow();
 	main.GetProcessApplet().Open(title);
 	main.DisableInteractions();
 	scheduler.Schedule<uint64_t>(std::move(task),
 		[=](uint64_t value)
 		{
-			auto& main = game.GetMainWindow().GetMainApplet();
+			auto& main = game.GetMainWindow();
 			main.GetProcessApplet().Close();
 			main.EnableInteractions();
 			if (resolveCallback)
@@ -172,7 +172,7 @@ void VaultCommander::ProcessVaultTask(std::future<uint64_t>&& task, const Functi
 		},
 		[](const std::exception&)
 		{
-			auto& main = game.GetMainWindow().GetMainApplet();
+			auto& main = game.GetMainWindow();
 			main.GetProcessApplet().Close();
 			main.EnableInteractions();
 		});

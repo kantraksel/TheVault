@@ -12,6 +12,12 @@ ChangeFileModal::ChangeFileModal() : BaseIndexModal("Change File")
 {
 }
 
+void ChangeFileModal::OnClose()
+{
+	filePath.clear();
+	fileName.clear();
+}
+
 void ChangeFileModal::OnRender()
 {
 	auto& store = game.GetContentStore();
@@ -41,24 +47,16 @@ void ChangeFileModal::OnRender()
 			{
 				Modals::GetErrorModal().Open("Failed to read file - check permissions or logs for more details");
 			}
-			filePath.clear();
-			fileName.clear();
-			ImGui::CloseCurrentPopup();
+			Close();
 		}
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Change Name"))
 	{
-		filePath.clear();
-		fileName.clear();
-		ImGui::CloseCurrentPopup();
+		Close();
 		Modals::GetChangeNameModal().Open(selectedIndex);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel"))
-	{
-		filePath.clear();
-		fileName.clear();
-		ImGui::CloseCurrentPopup();
-	}
+		Close();
 }

@@ -17,6 +17,11 @@ void ErrorModal::Open()
 {
 }
 
+void ErrorModal::OnClose()
+{
+	message.clear();
+}
+
 void ErrorModal::OnRender()
 {
 	if (isErrorCritical)
@@ -34,8 +39,5 @@ void ErrorModal::OnRender()
 
 	TextWrapped(message);
 	if (ButtonRightAligned("Close"))
-	{
-		message.clear();
-		ImGui::CloseCurrentPopup();
-	}
+		Close();
 }

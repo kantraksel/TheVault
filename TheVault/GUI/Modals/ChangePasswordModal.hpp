@@ -9,6 +9,7 @@ public:
 
 protected:
 	void OnRender() override;
+	void OnClose() override;
 
 	std::string pwdInput;
 };

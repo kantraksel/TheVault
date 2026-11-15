@@ -12,7 +12,6 @@ add_executable(TheVault WIN32
 			GUI/MainWindow.cpp
 			GUI/Applets/LockApplet.cpp
 			GUI/Applets/LoginApplet.cpp
-			GUI/Applets/MainApplet.cpp
 			GUI/Applets/ProcessApplet.cpp
 			GUI/Applets/WelcomeApplet.cpp
 			GUI/Modals/BaseModal.cpp

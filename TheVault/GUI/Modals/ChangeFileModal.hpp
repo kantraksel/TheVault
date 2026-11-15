@@ -9,6 +9,7 @@ public:
 
 protected:
 	void OnRender() override;
+	void OnClose() override;
 
 	std::wstring filePath;
 	std::string fileName;

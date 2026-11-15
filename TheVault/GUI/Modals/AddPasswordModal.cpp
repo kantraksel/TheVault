@@ -10,6 +10,12 @@ AddPasswordModal::AddPasswordModal() : BaseModal("Add Password")
 	pwdInput.resize(256);
 }
 
+void AddPasswordModal::OnClose()
+{
+	memset(nameInput.data(), 0, nameInput.size());
+	memset(pwdInput.data(), 0, pwdInput.size());
+}
+
 void AddPasswordModal::OnRender()
 {
 	TextWidget("Name:");
@@ -32,17 +38,10 @@ void AddPasswordModal::OnRender()
 		if (!name.empty() && !pwd.empty())
 		{
 			game.GetContentStore().AddText(name, pwd);
-
-			memset(nameInput.data(), 0, nameInput.size());
-			memset(pwdInput.data(), 0, pwdInput.size());
-			ImGui::CloseCurrentPopup();
+			Close();
 		}
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel"))
-	{
-		memset(nameInput.data(), 0, nameInput.size());
-		memset(pwdInput.data(), 0, pwdInput.size());
-		ImGui::CloseCurrentPopup();
-	}
+		Close();
 }

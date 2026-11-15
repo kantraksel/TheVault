@@ -31,9 +31,9 @@ void DeleteEntryModal::OnRender()
 			game.GetContentStore().Remove(selectedIndex);
 		else
 			game.GetKeeper().RemoveHint(selectedIndex);
-		ImGui::CloseCurrentPopup();
+		Close();
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("No"))
-		ImGui::CloseCurrentPopup();
+		Close();
 }

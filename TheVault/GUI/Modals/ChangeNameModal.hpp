@@ -10,6 +10,7 @@ public:
 protected:
 	void OnRender() override;
 	void OnOpen() override;
+	void OnClose() override;
 
 	std::string nameInput;
 };

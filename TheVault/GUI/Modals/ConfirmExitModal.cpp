@@ -26,16 +26,16 @@ void ConfirmExitModal::OnRender()
 
 	if (ImGui::Button("Yes"))
 	{
-		ImGui::CloseCurrentPopup();
+		Close();
 		game.GetVaultCommander().SaveVault(true, closeAppOnConfirmExit);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("No"))
 	{
-		ImGui::CloseCurrentPopup();
+		Close();
 		game.GetVaultCommander().CloseVault(closeAppOnConfirmExit);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel"))
-		ImGui::CloseCurrentPopup();
+		Close();
 }

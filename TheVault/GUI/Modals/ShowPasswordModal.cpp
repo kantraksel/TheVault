@@ -27,10 +27,10 @@ void ShowPasswordModal::OnRender()
 	ImGui::SameLine();
 	if (ImGui::Button("Change"))
 	{
-		ImGui::CloseCurrentPopup();
+		Close();
 		Modals::GetChangePasswordModal().Open(selectedIndex);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Close"))
-		ImGui::CloseCurrentPopup();
+		Close();
 }

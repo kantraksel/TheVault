@@ -13,6 +13,13 @@ AddFileModal::AddFileModal() : BaseModal("Add File")
 	nameInput.resize(256);
 }
 
+void AddFileModal::OnClose()
+{
+	memset(nameInput.data(), 0, nameInput.size());
+	filePath.clear();
+	fileName.clear();
+}
+
 void AddFileModal::OnRender()
 {
 	TextWidget("Name:");
@@ -29,7 +36,11 @@ void AddFileModal::OnRender()
 
 			auto name = std::string_view(nameInput.data());
 			if (name.empty())
-				nameInput = fileName;
+			{
+				memcpy_s(nameInput.data(), nameInput.size(), name.data(), name.size());
+				if (nameInput.size() > name.size())
+					nameInput[name.size()] = 0;
+			}
 		}
 	}
 	ImGui::SameLine();
@@ -47,18 +58,10 @@ void AddFileModal::OnRender()
 			{
 				Modals::GetErrorModal().Open("Failed to read file - check permissions or logs for more details");
 			}
-			memset(nameInput.data(), 0, nameInput.size());
-			filePath.clear();
-			fileName.clear();
-			ImGui::CloseCurrentPopup();
+			Close();
 		}
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel"))
-	{
-		memset(nameInput.data(), 0, nameInput.size());
-		filePath.clear();
-		fileName.clear();
-		ImGui::CloseCurrentPopup();
-	}
+		Close();
 }

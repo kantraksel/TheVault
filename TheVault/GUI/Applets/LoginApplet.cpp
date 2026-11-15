@@ -72,7 +72,7 @@ void LoginApplet::Render()
 							case VaultKeeper::Success:
 							{
 								Close();
-								game.GetMainWindow().GetMainApplet().EnableInteractions();
+								game.GetMainWindow().EnableInteractions();
 								break;
 							}
 

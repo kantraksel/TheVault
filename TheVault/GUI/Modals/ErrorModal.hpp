@@ -13,4 +13,5 @@ protected:
 	bool isErrorCritical;
 	void Open() override;
 	void OnRender() override;
+	void OnClose() override;
 };
