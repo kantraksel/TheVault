@@ -330,6 +330,7 @@ bool ContentStore::Deserialize(const SecureArray& data)
 		return false;
 	}
 
+	std::vector<std::pair<std::string, Pass>> store;
 	for (YamlNode n : node.Children())
 	{
 		if (n.IsMap())
@@ -353,7 +354,7 @@ bool ContentStore::Deserialize(const SecureArray& data)
 				Pass pass;
 				pass.type = PassType::File;
 				pass.content = Crypto::Base64ToBuffer(content);
-				mStore.emplace_back(std::string(n.GetKey()), std::move(pass));
+				store.emplace_back(std::string(n.GetKey()), std::move(pass));
 			}
 			else if (type == "Text")
 			{
@@ -367,7 +368,7 @@ bool ContentStore::Deserialize(const SecureArray& data)
 				Pass pass;
 				pass.type = PassType::Text;
 				pass.content = CopyPassword(content);
-				mStore.emplace_back(std::string(n.GetKey()), std::move(pass));
+				store.emplace_back(std::string(n.GetKey()), std::move(pass));
 			}
 			else
 				Logger::LogWarn("Invalid type of entry {} - unknown type {}", n.GetKey(), type);
@@ -375,5 +376,12 @@ bool ContentStore::Deserialize(const SecureArray& data)
 		else
 			Logger::LogWarn("Invalid type of entry {} - not an object", n.GetKey());
 	}
+	auto lock = AcquireAccessLock();
+	mStore = std::move(store);
 	return true;
+}
+
+std::unique_lock<std::mutex> ContentStore::AcquireAccessLock()
+{
+	return std::unique_lock(accessMutex);
 }

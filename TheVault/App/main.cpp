@@ -17,12 +17,8 @@ Game::~Game()
 
 bool Game::OnClose()
 {
-	if (unsavedState.HasChanged())
-	{
-		Modals::GetConfirmExitModal().Open(true);
-		return false;
-	}
-	return true;
+	vaultCommander.TryCloseVault(true);
+	return false;
 }
 
 bool Game::OnInitialize()

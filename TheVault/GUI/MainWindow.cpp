@@ -27,7 +27,6 @@ void MainWindow::Render()
 	if (ImGui::Begin("TheVault##MainWindow", nullptr, flags))
 	{
 		RenderMainArea();
-		lockApplet.Render();
 		loginApplet.Render();
 		welcomeApplet.Render();
 		processApplet.Render();
@@ -59,6 +58,7 @@ void MainWindow::RenderMainArea()
 		ImGui::TableHeadersRow();
 
 		auto& store = game.GetContentStore();
+		auto lock = store.AcquireAccessLock();
 		int hintCount = store.GetCount();
 		for (int i = 0; i < hintCount; ++i)
 		{
@@ -143,6 +143,8 @@ void MainWindow::RenderMainArea()
 
 		ImGui::EndTable();
 	}
+
+	lockApplet.Render();
 	if (hasDisabledStarted)
 		ImGui::EndDisabled();
 }
@@ -166,21 +168,11 @@ void MainWindow::RenderMenuBar()
 			if (ImGui::MenuItem("Save", "Ctrl+S"))
 				game.GetVaultCommander().SaveVault();
 			if (ImGui::MenuItem("Close"))
-			{
-				if (game.GetUnsavedState().HasChanged())
-					Modals::GetConfirmExitModal().Open();
-				else
-					game.GetVaultCommander().CloseVault();
-			}
+				game.GetVaultCommander().TryCloseVault();
 
 			ImGui::Separator();
 			if (ImGui::MenuItem("Exit"))
-			{
-				if (game.GetUnsavedState().HasChanged())
-					Modals::GetConfirmExitModal().Open(true);
-				else
-					GhostFries::Quit();
-			}
+				game.GetVaultCommander().TryCloseVault(true);
 
 			ImGui::EndMenu();
 		}

@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <mutex>
 #include "UnsavedState.h"
 #include "Utils/SecureArray.h"
 
@@ -9,6 +10,7 @@ class ContentStore
 private:
 	std::vector<std::pair<std::string, struct Pass>> mStore;
 	UnsavedState& unsavedState;
+	std::mutex accessMutex;
 
 	bool CheckBounds(int i);
 
@@ -37,4 +39,6 @@ public:
 
 	SecureArray Serialize();
 	bool Deserialize(const SecureArray& data);
+
+	std::unique_lock<std::mutex> AcquireAccessLock();
 };

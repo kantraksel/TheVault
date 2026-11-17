@@ -17,6 +17,7 @@ public:
 	void OpenVault(const std::wstring& file);
 	void SaveVault(bool closeVault = false, bool exitApp = false);
 	void CloseVault(bool exitApp = false);
+	void TryCloseVault(bool exitApp = false);
 
 	void SubmitPassword(const std::string_view& password, const Function<void(uint64_t)>& resolveCallback);
 	void SetPassword(int i, const std::string_view& password, const Function<void(uint64_t)>& resolveCallback);

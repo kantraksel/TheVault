@@ -199,16 +199,16 @@ Future VaultKeeper::SetHintKey(int i, const std::string_view& password)
 {
 	return game.GetWorker().SendCmd([=, this](const SecureArray& password) -> uint64_t
 		{
-			std::lock_guard lock(chainMutex);
-			if (i >= mChain.size() || i < 0)
-				return Failed;
-
 			Logger::Log("Creating password key");
 			auto pass = std::string_view(reinterpret_cast<const char*>(password.data()), password.size());
 			SecureArray salt;
 			auto key = game.GetVault().CreateKey(pass, salt);
 			if (!key)
 				return RaiseError("Failed to create password key");
+
+			std::lock_guard lock(chainMutex);
+			if (i >= mChain.size() || i < 0)
+				return Failed;
 
 			mChain[i].key = std::move(key);
 			mChain[i].salt = std::move(salt);

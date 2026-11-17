@@ -122,6 +122,14 @@ void VaultCommander::SaveVault(bool closeVault, bool exitApp)
 		"Saving vault...");
 }
 
+void VaultCommander::TryCloseVault(bool exitApp)
+{
+	if (game.GetUnsavedState().HasChanged())
+		Modals::GetConfirmExitModal().Open(exitApp);
+	else
+		CloseVault(exitApp);
+}
+
 void VaultCommander::CloseVault(bool exitApp)
 {
 	ProcessVaultTask(game.GetKeeper().CloseVault(),
