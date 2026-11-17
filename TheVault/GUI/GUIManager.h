@@ -1,11 +1,10 @@
 #pragma once
-#include <vector>
-#include "IRender.h"
+#include "Utility/Function.h"
 
 class GUIManager
 {
 private:
-	std::vector<IRender*> objects;
+	Function<void()> renderCallback;
 
 	bool InitImguiBackends();
 	bool SetupWindow();
@@ -14,9 +13,7 @@ public:
 	GUIManager();
 	~GUIManager();
 
-	bool Initialize();
+	bool Initialize(const Function<void()>& callback);
 	void Shutdown();
-	
-	void RegisterObject(IRender* obj);
 	void Render();
 };

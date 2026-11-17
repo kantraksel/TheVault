@@ -25,10 +25,9 @@ bool Game::OnInitialize()
 {
 	GhostFries::GetWindowManager().SetCloseCallback({ MemberFunc<&Game::OnClose>, this });
 
-	if (!gui.Initialize())
+	if (!gui.Initialize({ MemberFunc<&MainWindow::Render>, &mainWnd }))
 		return false;
 
-	gui.RegisterObject(&mainWnd);
 	worker.Init();
 	return true;
 }

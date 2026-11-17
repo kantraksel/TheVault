@@ -36,7 +36,7 @@ GUIManager::~GUIManager()
 	ImGui::DestroyContext();
 }
 
-bool GUIManager::Initialize()
+bool GUIManager::Initialize(const Function<void()>& callback)
 {
 	if (!InitImguiBackends() || !SetupWindow())
 	{
@@ -44,6 +44,7 @@ bool GUIManager::Initialize()
 		return false;
 	}
 	GhostFries::GetRenderEngine().GetRenderEvent() = { MemberFunc<&GUIManager::Render>, this };
+	renderCallback = callback;
 	return true;
 }
 
@@ -103,7 +104,7 @@ bool GUIManager::SetupWindow()
 
 void GUIManager::Shutdown()
 {
-	objects.clear();
+	renderCallback = {};
 
 	auto& io = ImGui::GetIO();
 	if (io.BackendRendererUserData)
@@ -118,16 +119,9 @@ void GUIManager::Render()
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	for (auto* obj : objects)
-	{
-		obj->Render();
-	}
+	if (renderCallback)
+		renderCallback();
 	
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-}
-
-void GUIManager::RegisterObject(IRender* obj)
-{
-	objects.push_back(obj);
 }

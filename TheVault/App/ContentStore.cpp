@@ -14,6 +14,7 @@ enum struct PassType
 
 struct Pass
 {
+	std::string name;
 	PassType type;
 	SecureArray content;
 };
@@ -46,22 +47,23 @@ bool ContentStore::IsText(int i)
 {
 	if (!CheckBounds(i))
 		return false;
-	return mStore[i].second.type == PassType::Text;
+	return mStore[i].type == PassType::Text;
 }
 
 bool ContentStore::IsFile(int i)
 {
 	if (!CheckBounds(i))
 		return false;
-	return mStore[i].second.type == PassType::File;
+	return mStore[i].type == PassType::File;
 }
 
 int ContentStore::Add(const std::string_view& name)
 {
 	int i = static_cast<int>(mStore.size());
 
-	mStore.emplace_back(std::string(name), Pass
+	mStore.emplace_back(Pass
 		{
+			.name = std::string(name),
 			.type = PassType::Text,
 		});
 
@@ -73,7 +75,7 @@ std::string_view ContentStore::GetName(int i)
 {
 	if (!CheckBounds(i))
 		return {};
-	return mStore[i].first;
+	return mStore[i].name;
 }
 
 std::string_view ContentStore::GetText(int i)
@@ -81,7 +83,7 @@ std::string_view ContentStore::GetText(int i)
 	if (!CheckBounds(i))
 		return {};
 
-	auto& pass = mStore[i].second;
+	auto& pass = mStore[i];
 	if (pass.type != PassType::Text)
 	{
 		assert(false && "Incorrect entry type");
@@ -130,7 +132,7 @@ void ContentStore::SetText(int i, const std::string_view& password)
 	if (!CheckBounds(i))
 		return;
 
-	auto& pass = mStore[i].second;
+	auto& pass = mStore[i];
 	pass.type = PassType::Text;
 	pass.content = CopyPassword(password);
 	unsavedState.NotifyChange();
@@ -141,7 +143,7 @@ void ContentStore::SetName(int i, const std::string_view& name)
 	if (!CheckBounds(i))
 		return;
 
-	mStore[i].first = name;
+	mStore[i].name = name;
 	unsavedState.NotifyChange();
 }
 
@@ -170,7 +172,7 @@ bool ContentStore::SetFile(int i, const std::wstring_view& file)
 		return false;
 	}
 
-	auto& pass = mStore[i].second;
+	auto& pass = mStore[i];
 	pass.type = PassType::File;
 	pass.content = std::move(buffer);
 	unsavedState.NotifyChange();
@@ -182,7 +184,7 @@ bool ContentStore::ExtractFile(int i, const std::wstring_view& file)
 	if (!CheckBounds(i))
 		return false;
 
-	auto& pass = mStore[i].second;
+	auto& pass = mStore[i];
 	if (pass.type != PassType::File)
 	{
 		assert(false && "Incorrect entry type");
@@ -250,11 +252,11 @@ SecureArray ContentStore::Serialize()
 	doc["version"] = DocumentVersion;
 	auto node = doc["password"].SetMap();
 
-	for (auto& [name, pass] : mStore)
+	for (auto& pass : mStore)
 	{
 		if (pass.type == PassType::Text)
 		{
-			auto child = node[name].SetMap();
+			auto child = node[pass.name].SetMap();
 			child["type"] = "Text";
 
 			if (pass.content.empty())
@@ -272,14 +274,14 @@ SecureArray ContentStore::Serialize()
 				return {};
 			}
 
-			auto child = node[name].SetMap();
+			auto child = node[pass.name].SetMap();
 			child["type"] = "Data";
 			child["value"] = content;
 		}
 		else
 		{
 			assert(false && "Unknown entry type - cannot serialize");
-			Logger::LogWarn("Cannot serialize entry {} - type {} not defined in serializer", name, static_cast<int>(pass.type));
+			Logger::LogWarn("Cannot serialize entry {} - type {} not defined in serializer", pass.name, static_cast<int>(pass.type));
 		}
 	}
 
@@ -330,7 +332,7 @@ bool ContentStore::Deserialize(const SecureArray& data)
 		return false;
 	}
 
-	std::vector<std::pair<std::string, Pass>> store;
+	std::vector<Pass> store;
 	for (YamlNode n : node.Children())
 	{
 		if (n.IsMap())
@@ -352,9 +354,10 @@ bool ContentStore::Deserialize(const SecureArray& data)
 				}
 
 				Pass pass;
+				pass.name = std::string(n.GetKey());
 				pass.type = PassType::File;
 				pass.content = Crypto::Base64ToBuffer(content);
-				store.emplace_back(std::string(n.GetKey()), std::move(pass));
+				store.emplace_back(std::move(pass));
 			}
 			else if (type == "Text")
 			{
@@ -366,9 +369,10 @@ bool ContentStore::Deserialize(const SecureArray& data)
 				}
 
 				Pass pass;
+				pass.name = std::string(n.GetKey());
 				pass.type = PassType::Text;
 				pass.content = CopyPassword(content);
-				store.emplace_back(std::string(n.GetKey()), std::move(pass));
+				store.emplace_back(std::move(pass));
 			}
 			else
 				Logger::LogWarn("Invalid type of entry {} - unknown type {}", n.GetKey(), type);

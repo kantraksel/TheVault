@@ -8,13 +8,15 @@
 class ContentStore
 {
 private:
-	std::vector<std::pair<std::string, struct Pass>> mStore;
+	std::vector<struct Pass> mStore;
 	UnsavedState& unsavedState;
 	std::mutex accessMutex;
 
 	bool CheckBounds(int i);
 
 public:
+	static ContentStore& Get();
+
 	ContentStore(UnsavedState& unsavedState);
 	~ContentStore();
 	void Reset();

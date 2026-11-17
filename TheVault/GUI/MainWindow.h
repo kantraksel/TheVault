@@ -1,12 +1,11 @@
 #pragma once
-#include "IRender.h"
 #include "Applets/LockApplet.h"
 #include "Applets/LoginApplet.h"
 #include "Applets/WelcomeApplet.h"
 #include "Applets/ProcessApplet.h"
 #include "Modals.hpp"
 
-class MainWindow : public IRender
+class MainWindow
 {
 private:
 	LockApplet lockApplet;
@@ -25,7 +24,7 @@ public:
 	MainWindow();
 	~MainWindow();
 
-	void Render() override;
+	void Render();
 	void DisableInteractions();
 	void EnableInteractions();
 
