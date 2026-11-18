@@ -1,11 +1,9 @@
 #include "WelcomeApplet.h"
+#include "GUI/VaultCommander.hpp"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
 #include "Utils/WinApi.h"
 
-extern Game game;
-
-WelcomeApplet::WelcomeApplet() : isOpen{false}
+WelcomeApplet::WelcomeApplet(MainWindow& mainWindow) : BlockingApplet(mainWindow)
 {
 }
 
@@ -13,21 +11,14 @@ WelcomeApplet::~WelcomeApplet()
 {
 }
 
-void WelcomeApplet::Open()
-{
-	isOpen = true;
-}
-
 void WelcomeApplet::Close()
 {
-	isOpen = false;
+	BlockingApplet::Close();
 	name.clear();
 }
 
-void WelcomeApplet::Render()
+void WelcomeApplet::OnRender()
 {
-	if (!isOpen)
-		return;
 	BeginVisibleChildWindow("##Welcome", ImVec2(285, 0));
 
 	Text("Welcome to TheVault");
@@ -35,13 +26,13 @@ void WelcomeApplet::Render()
 
 	if (ImGui::Button("Open existing vault") && WinApi::OpenFileDialog(L"Open existing vault", L"vault.bin", name))
 	{
-		game.GetVaultCommander().OpenVault(name);
+		VaultCommander::Get().OpenVault(name);
 		Close();
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Create new vault") && WinApi::SaveFileDialog(L"Create new vault", L"vault.bin", name))
 	{
-		game.GetVaultCommander().CreateVault(name);
+		VaultCommander::Get().CreateVault(name);
 		Close();
 	}
 

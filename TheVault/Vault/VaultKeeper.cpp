@@ -1,14 +1,16 @@
 #include <optional>
 #include "VaultKeeper.h"
-#include "App/Game.h"
+#include "WorkerThread.h"
+#include "Vault.h"
+#include "App/ContentStore.h"
+#include "GUI/VaultCommander.hpp"
 #include "Crypto.h"
 #include "Engine/Logger.h"
 #include "Utility/StringUtils.h"
 
-extern Game game;
 using Future = VaultKeeper::Future;
 
-VaultKeeper::VaultKeeper()
+VaultKeeper::VaultKeeper(ContentStore& store, UnsavedState& unsavedState) : store{store}, unsavedState{unsavedState}
 {
 	file = L"vault.bin";
 	mChain.reserve(16);
@@ -18,11 +20,20 @@ VaultKeeper::~VaultKeeper()
 {
 }
 
+void VaultKeeper::Initialize()
+{
+	worker.Initialize();
+}
+
+void VaultKeeper::Shutdown()
+{
+	worker.Shutdown();
+}
+
 Future VaultKeeper::OpenVault(const std::wstring& file)
 {
-	return game.GetWorker().SendCmd([=, this]() -> uint64_t
+	return worker.SendCmd([=, this]() -> uint64_t
 		{
-			auto& vault = game.GetVault();
 			ResetState();
 			if (!vault.Open(file))
 			{
@@ -36,7 +47,6 @@ Future VaultKeeper::OpenVault(const std::wstring& file)
 			if (block)
 			{
 				Logger::Log("Deserializing content");
-				auto& store = game.GetContentStore();
 
 				auto size = strnlen_s(reinterpret_cast<const char*>(block.data()), block.size());
 				if (!store.Deserialize(block.span(0, size)))
@@ -44,7 +54,7 @@ Future VaultKeeper::OpenVault(const std::wstring& file)
 				Logger::Log("Opened vault");
 
 				vault.Reset();
-				game.GetUnsavedState().ClearChange();
+				unsavedState.ClearChange();
 				return Success;
 			}
 
@@ -64,24 +74,22 @@ Future VaultKeeper::OpenVault(const std::wstring& file)
 
 Future VaultKeeper::CreateVault(const std::wstring& file)
 {
-	return game.GetWorker().SendCmd([=, this]
+	return worker.SendCmd([=, this]
 		{
 			Logger::Log("Preparing new vault");
 
 			ResetState();
 			this->file = file;
 
-			game.GetUnsavedState().NotifyChange();
+			unsavedState.NotifyChange();
 			return Success;
 		});
 }
 
 Future VaultKeeper::CloseVault()
 {
-	return game.GetWorker().SendCmd([=, this]
+	return worker.SendCmd([=, this]
 		{
-			//if changed, save
-
 			ResetState();
 			Logger::Log("Closed vault");
 			return Success;
@@ -95,9 +103,9 @@ void VaultKeeper::ResetState()
 		mChain.clear();
 	}
 
-	game.GetVault().Reset();
-	game.GetContentStore().Reset();
-	game.GetUnsavedState().ClearChange();
+	vault.Reset();
+	store.Reset();
+	unsavedState.ClearChange();
 	this->file = L"vault.bin";
 }
 
@@ -110,14 +118,13 @@ void VaultKeeper::GetLastHint(std::string& str)
 
 Future VaultKeeper::SubmitPassword(const std::string_view& password)
 {
-	return game.GetWorker().SendCmd([this](const SecureArray& password) -> uint64_t
+	return worker.SendCmd([this](const SecureArray& password) -> uint64_t
 		{
 			auto pass = std::string_view(reinterpret_cast<const char*>(password.data()), password.size());
 			if (pass.empty())
 				return Failed;
 
 			Logger::Log("Creating password key");
-			auto& vault = game.GetVault();
 			auto salt = SecureArray::Copy(vault.GetStepSalt());
 			auto key = vault.CreateKey(pass, salt);
 			if (!key)
@@ -141,7 +148,6 @@ Future VaultKeeper::SubmitPassword(const std::string_view& password)
 			if (block)
 			{
 				Logger::Log("Deserializing content");
-				auto& store = game.GetContentStore();
 
 				auto size = strnlen_s(reinterpret_cast<const char*>(block.data()), block.size());
 				if (!store.Deserialize(block.span(0, size)))
@@ -149,7 +155,7 @@ Future VaultKeeper::SubmitPassword(const std::string_view& password)
 				Logger::Log("Opened vault");
 
 				vault.Reset();
-				game.GetUnsavedState().ClearChange();
+				unsavedState.ClearChange();
 				return Success;
 			}
 
@@ -174,7 +180,7 @@ int VaultKeeper::AddHint(const std::string_view& hint)
 			.hint = std::string(hint),
 		});
 
-	game.GetUnsavedState().NotifyChange();
+	unsavedState.NotifyChange();
 	return index;
 }
 
@@ -192,17 +198,17 @@ void VaultKeeper::RemoveHint(int i)
 
 	mChain.erase(it1);
 
-	game.GetUnsavedState().NotifyChange();
+	unsavedState.NotifyChange();
 }
 
 Future VaultKeeper::SetHintKey(int i, const std::string_view& password)
 {
-	return game.GetWorker().SendCmd([=, this](const SecureArray& password) -> uint64_t
+	return worker.SendCmd([=, this](const SecureArray& password) -> uint64_t
 		{
 			Logger::Log("Creating password key");
 			auto pass = std::string_view(reinterpret_cast<const char*>(password.data()), password.size());
 			SecureArray salt;
-			auto key = game.GetVault().CreateKey(pass, salt);
+			auto key = vault.CreateKey(pass, salt);
 			if (!key)
 				return RaiseError("Failed to create password key");
 
@@ -214,17 +220,17 @@ Future VaultKeeper::SetHintKey(int i, const std::string_view& password)
 			mChain[i].salt = std::move(salt);
 			Logger::Log("Set password key");
 
-			game.GetUnsavedState().NotifyChange();
+			unsavedState.NotifyChange();
 			return Success;
 		}, SecureArray::CreateRef(password.data(), password.size()));
 }
 
 Future VaultKeeper::SaveVault()
 {
-	return game.GetWorker().SendCmd([=, this]() -> uint64_t
+	return worker.SendCmd([=, this]() -> uint64_t
 			{
 				Logger::Log("Serializing content");
-				auto content = game.GetContentStore().Serialize();
+				auto content = store.Serialize();
 				if (content.empty())
 				{
 					RaiseError("Failed to serialize content");
@@ -238,7 +244,6 @@ Future VaultKeeper::SaveVault()
 
 				Logger::Log("Placing vault");
 
-				auto& vault = game.GetVault();
 				vault.Reset();
 				vault.ResetSteps();
 
@@ -269,7 +274,7 @@ Future VaultKeeper::SaveVault()
 				Logger::Log(L"Placed vault at {}", file);
 
 				vault.Reset();
-				game.GetUnsavedState().ClearChange();
+				unsavedState.ClearChange();
 				return Success;
 			});
 }
@@ -298,7 +303,7 @@ bool VaultKeeper::DirectApi::IsKeyAssigned(int i)
 uint64_t VaultKeeper::RaiseError(const std::string_view& msg, bool critical)
 {
 	Logger::LogError("[VaultKeeper] {}", msg);
-	game.GetVaultCommander().ShowError(msg, critical);
+	VaultCommander::Get().ShowError(msg, critical);
 	return Failed;
 }
 
@@ -314,5 +319,5 @@ void VaultKeeper::ChangeHint(int i, const std::string_view& hint)
 		return;
 
 	mChain[i].hint = hint;
-	game.GetUnsavedState().NotifyChange();
+	unsavedState.NotifyChange();
 }

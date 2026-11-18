@@ -1,17 +1,19 @@
 #pragma once
 #include <string>
+#include "BlockingApplet.hpp"
 
-class WelcomeApplet
+class WelcomeApplet : public BlockingApplet
 {
-private:
+protected:
 	std::wstring name;
-	bool isOpen;
+
+	void OnRender() override;
 
 public:
-	WelcomeApplet();
+	static WelcomeApplet& Get();
+
+	WelcomeApplet(MainWindow& mainWindow);
 	~WelcomeApplet();
 
-	void Open();
-	void Close();
-	void Render();
+	void Close() override;
 };

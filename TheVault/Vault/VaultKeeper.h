@@ -3,6 +3,9 @@
 #include <vector>
 #include <mutex>
 #include <future>
+#include "App/UnsavedState.h"
+#include "Vault/Vault.h"
+#include "Vault/WorkerThread.h"
 #include "Utils/SecureArray.h"
 
 class VaultKeeper
@@ -22,12 +25,22 @@ private:
 	std::mutex chainMutex;
 	std::wstring file; //used only in the thread
 
+	Vault vault;
+	WorkerThread worker;
+	class ContentStore& store;
+	UnsavedState& unsavedState;
+
 	void ResetState();
 	uint64_t RaiseError(const std::string_view& msg, bool critical = false);
 
 public:
-	VaultKeeper();
+	static VaultKeeper& Get();
+
+	VaultKeeper(ContentStore& store, UnsavedState& unsavedState);
 	~VaultKeeper();
+
+	void Initialize();
+	void Shutdown();
 
 	Future OpenVault(const std::wstring& file);
 	Future CreateVault(const std::wstring& file);

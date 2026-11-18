@@ -1,18 +1,16 @@
 #include "ShowPasswordModal.hpp"
+#include "ChangePasswordModal.hpp"
+#include "App/ContentStore.h"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
 #include "Utils/WinApi.h"
-#include "../Modals.hpp"
 
-extern Game game;
-
-ShowPasswordModal::ShowPasswordModal() : BaseIndexModal("Password Details")
+ShowPasswordModal::ShowPasswordModal(ChangePasswordModal& changePasswordModal) : BaseIndexModal("Password Details"), changePasswordModal(changePasswordModal)
 {
 }
 
 void ShowPasswordModal::OnRender()
 {
-	auto& store = game.GetContentStore();
+	auto& store = ContentStore::Get();
 	Text("Name:");
 	ImGui::SameLine();
 	Text(store.GetName(selectedIndex));
@@ -28,7 +26,7 @@ void ShowPasswordModal::OnRender()
 	if (ImGui::Button("Change"))
 	{
 		Close();
-		Modals::GetChangePasswordModal().Open(selectedIndex);
+		changePasswordModal.Open(selectedIndex);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Close"))

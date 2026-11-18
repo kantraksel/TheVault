@@ -4,8 +4,10 @@
 class ShowPasswordWarningModal : public BaseIndexModal
 {
 public:
-	ShowPasswordWarningModal();
+	ShowPasswordWarningModal(class ShowPasswordModal& showPasswordModal);
 
 protected:
 	void OnRender() override;
+
+	ShowPasswordModal& showPasswordModal;
 };

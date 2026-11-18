@@ -1,11 +1,9 @@
 #include "ChangePasswordModal.hpp"
+#include "ChangeNameModal.hpp"
+#include "App/ContentStore.h"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
-#include "../Modals.hpp"
 
-extern Game game;
-
-ChangePasswordModal::ChangePasswordModal() : BaseIndexModal("Change Password")
+ChangePasswordModal::ChangePasswordModal(ChangeNameModal& changeNameModal) : BaseIndexModal("Change Password"), changeNameModal(changeNameModal)
 {
 	pwdInput.resize(256);
 }
@@ -17,7 +15,7 @@ void ChangePasswordModal::OnClose()
 
 void ChangePasswordModal::OnRender()
 {
-	auto& store = game.GetContentStore();
+	auto& store = ContentStore::Get();
 	Text("Name:");
 	ImGui::SameLine();
 	Text(store.GetName(selectedIndex));
@@ -41,7 +39,7 @@ void ChangePasswordModal::OnRender()
 	if (ImGui::Button("Change Name"))
 	{
 		Close();
-		Modals::GetChangeNameModal().Open(selectedIndex);
+		changeNameModal.Open(selectedIndex);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel"))

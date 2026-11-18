@@ -1,15 +1,19 @@
 #pragma once
 #include "ReactiveScheduler.hpp"
+#include "App/UnsavedState.h"
 
 class VaultCommander
 {
 private:
 	ReactiveScheduler scheduler;
+	UnsavedState& unsavedState;
 
 	void ProcessVaultTask(std::future<uint64_t>&& task, const Function<void(uint64_t)>& resolveCallback, const std::string_view& title = {});
 
 public:
-	VaultCommander();
+	static VaultCommander& Get();
+
+	VaultCommander(UnsavedState& unsavedState);
 	~VaultCommander();
 	void Update();
 

@@ -1,8 +1,7 @@
 #include "ChangeNameModal.hpp"
+#include "App/ContentStore.h"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
-
-extern Game game;
+#include "Vault/VaultKeeper.h"
 
 ChangeNameModal::ChangeNameModal() : BaseDualIndexModal("Change Name")
 {
@@ -13,9 +12,9 @@ void ChangeNameModal::OnOpen()
 {
 	std::string_view name;
 	if (!isLockIndex)
-		name = game.GetContentStore().GetName(selectedIndex);
+		name = ContentStore::Get().GetName(selectedIndex);
 	else
-		name = game.GetKeeper().GetDirectApi().GetHint(selectedIndex);
+		name = VaultKeeper::Get().GetDirectApi().GetHint(selectedIndex);
 
 	memcpy_s(nameInput.data(), nameInput.size(), name.data(), name.size());
 	if (nameInput.size() > name.size())
@@ -40,9 +39,9 @@ void ChangeNameModal::OnRender()
 		if (!name.empty())
 		{
 			if (!isLockIndex)
-				game.GetContentStore().SetName(selectedIndex, name);
+				ContentStore::Get().SetName(selectedIndex, name);
 			else
-				game.GetKeeper().ChangeHint(selectedIndex, name);
+				VaultKeeper::Get().ChangeHint(selectedIndex, name);
 
 			Close();
 		}

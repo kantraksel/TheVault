@@ -1,8 +1,7 @@
 #include "AddLockModal.hpp"
+#include "GUI/VaultCommander.hpp"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
-
-extern Game game;
+#include "Vault/VaultKeeper.h"
 
 AddLockModal::AddLockModal() : BaseModal("New Vault Lock"), isProcessing{false}
 {
@@ -40,14 +39,13 @@ void AddLockModal::OnRender()
 			auto pwd = std::string_view(pwdInput.data());
 			if (!name.empty())
 			{
-				auto& keeper = game.GetKeeper();
-				int index = keeper.AddHint(name);
+				int index = VaultKeeper::Get().AddHint(name);
 				memset(nameInput.data(), 0, nameInput.size());
 
 				if (!pwd.empty())
 				{
 					isProcessing = true;
-					game.GetVaultCommander().SetPassword(index, pwd, [this](uint64_t)
+					VaultCommander::Get().SetPassword(index, pwd, [this](uint64_t)
 						{
 							Close();
 						});

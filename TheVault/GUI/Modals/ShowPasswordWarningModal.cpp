@@ -1,8 +1,8 @@
 #include "ShowPasswordWarningModal.hpp"
+#include "ShowPasswordModal.hpp"
 #include "Utils/ImGuiUtils.h"
-#include "../Modals.hpp"
 
-ShowPasswordWarningModal::ShowPasswordWarningModal() : BaseIndexModal("Password Details - Warning")
+ShowPasswordWarningModal::ShowPasswordWarningModal(ShowPasswordModal& showPasswordModal) : BaseIndexModal("Password Details - Warning"), showPasswordModal(showPasswordModal)
 {
 }
 
@@ -12,7 +12,7 @@ void ShowPasswordWarningModal::OnRender()
 	if (ImGui::Button("Yes"))
 	{
 		Close();
-		Modals::GetShowPasswordModal().Open(selectedIndex);
+		showPasswordModal.Open(selectedIndex);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("No"))

@@ -1,12 +1,11 @@
 #include "LockApplet.h"
+#include "GUI/Modals/DeleteEntryModal.hpp"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
 #include "Utils/StringUtils.h"
-#include "../Modals.hpp"
+#include "Vault/VaultKeeper.h"
 
-extern Game game;
-
-LockApplet::LockApplet() : isOpen{}
+LockApplet::LockApplet(DeleteEntryModal& deleteEntryModal, ChangeNameModal& changeNameModal) : isOpen{ false }, changeLockPasswordModal(changeNameModal),
+                                                             deleteEntryModal(deleteEntryModal)
 {
 }
 
@@ -26,6 +25,9 @@ void LockApplet::Close()
 
 void LockApplet::Render()
 {
+	addLockModal.Render();
+	changeLockPasswordModal.Render();
+
 	if (!isOpen)
 		return;
 	BeginVisibleChildWindow("##VaultEncryptor", ImVec2(617, 200), ImGuiChildFlags_Borders, ImGuiWindowFlags_MenuBar);
@@ -49,7 +51,7 @@ void LockApplet::Render()
 		ImGui::TableSetupColumn("Actions");
 		ImGui::TableHeadersRow();
 
-		auto keeper = game.GetKeeper().GetDirectApi();
+		auto keeper = VaultKeeper::Get().GetDirectApi();
 
 		int hintCount = keeper.GetHintCount();
 		for (int i = 0; i < hintCount; ++i)
@@ -76,10 +78,10 @@ void LockApplet::Render()
 			}
 
 			if (ImGui::Button(title, ImVec2(width, 0)))
-				Modals::GetChangeLockPasswordModal().Open(i);
+				changeLockPasswordModal.Open(i);
 			ImGui::SameLine();
 			if (ImGui::Button("Delete"))
-				Modals::GetDeleteEntryModal().Open(i, true);
+				deleteEntryModal.Open(i, true);
 
 			ImGui::PopID();
 		}
@@ -88,7 +90,7 @@ void LockApplet::Render()
 		ImGui::TableNextColumn();
 		ImGui::TableNextColumn();
 		if (ImGui::Button("New Vault Lock"))
-			Modals::GetAddLockModal().Open();
+			addLockModal.Open();
 		ImGui::TableNextColumn();
 		ImGui::BeginDisabled();
 		ImGui::Button("Change");

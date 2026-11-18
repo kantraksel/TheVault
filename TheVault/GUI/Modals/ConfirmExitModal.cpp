@@ -1,10 +1,8 @@
 #include "ConfirmExitModal.hpp"
+#include "GUI/VaultCommander.hpp"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
 
-extern Game game;
-
-ConfirmExitModal::ConfirmExitModal() : BaseModal("Confirm Exit"), closeAppOnConfirmExit{}
+ConfirmExitModal::ConfirmExitModal() : BaseModal("Confirm Exit"), closeAppOnConfirmExit{false}
 {
 }
 
@@ -27,13 +25,13 @@ void ConfirmExitModal::OnRender()
 	if (ImGui::Button("Yes"))
 	{
 		Close();
-		game.GetVaultCommander().SaveVault(true, closeAppOnConfirmExit);
+		VaultCommander::Get().SaveVault(true, closeAppOnConfirmExit);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("No"))
 	{
 		Close();
-		game.GetVaultCommander().CloseVault(closeAppOnConfirmExit);
+		VaultCommander::Get().CloseVault(closeAppOnConfirmExit);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel"))

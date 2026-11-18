@@ -5,11 +5,12 @@
 class ChangePasswordModal : public BaseIndexModal
 {
 public:
-	ChangePasswordModal();
+	ChangePasswordModal(class ChangeNameModal& changeNameModal);
 
 protected:
 	void OnRender() override;
 	void OnClose() override;
 
 	std::string pwdInput;
+	ChangeNameModal& changeNameModal;
 };

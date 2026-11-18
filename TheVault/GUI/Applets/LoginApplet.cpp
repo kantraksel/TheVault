@@ -1,10 +1,10 @@
-#include "Utils/ImGuiUtils.h"
 #include "LoginApplet.h"
-#include "App/Game.h"
+#include "Utils/ImGuiUtils.h"
+#include "GUI/VaultCommander.hpp"
+#include "GUI/Modals/ErrorModal.hpp"
+#include "Vault/VaultKeeper.h"
 
-extern Game game;
-
-LoginApplet::LoginApplet() : isOpen{false}, firstFrameDraw{false}, isProcessing{false}
+LoginApplet::LoginApplet(MainWindow& mainWindow) : BlockingApplet(mainWindow), firstFrameDraw{false}, isProcessing{false}
 {
 	passwordInput.resize(256);
 }
@@ -15,7 +15,7 @@ LoginApplet::~LoginApplet()
 
 void LoginApplet::Open()
 {
-	isOpen = true;
+	BlockingApplet::Open();
 	firstFrameDraw = true;
 	isProcessing = false;
 	RefreshHintName();
@@ -23,15 +23,13 @@ void LoginApplet::Open()
 
 void LoginApplet::Close()
 {
-	isOpen = false;
+	BlockingApplet::Close();
 	hint.clear();
 	memset(passwordInput.data(), 0, passwordInput.size());
 }
 
-void LoginApplet::Render()
+void LoginApplet::OnRender()
 {
-	if (!isOpen)
-		return;
 	bool isWindowOpen = isOpen;
 
 	ImGui::SetNextWindowSize(ImVec2(350, 0));
@@ -59,7 +57,7 @@ void LoginApplet::Render()
 			if (!password.empty())
 			{
 				isProcessing = true;
-				game.GetVaultCommander().SubmitPassword(password, [this](uint64_t result)
+				VaultCommander::Get().SubmitPassword(password, [this](uint64_t result)
 					{
 						switch (result)
 						{
@@ -72,7 +70,6 @@ void LoginApplet::Render()
 							case VaultKeeper::Success:
 							{
 								Close();
-								game.GetMainWindow().EnableInteractions();
 								break;
 							}
 
@@ -86,7 +83,7 @@ void LoginApplet::Render()
 							default:
 							{
 								auto message = std::format("Unknown result code {} returned by SaveVault", result);
-								Modals::GetErrorModal().Open(message, true);
+								ErrorModal::Get().Open(message, true);
 								break;
 							}
 						}
@@ -110,11 +107,11 @@ void LoginApplet::Render()
 	if (!isWindowOpen)
 	{
 		Close();
-		game.GetVaultCommander().CloseVault();
+		VaultCommander::Get().CloseVault();
 	}
 }
 
 void LoginApplet::RefreshHintName()
 {
-	game.GetKeeper().GetLastHint(hint);
+	VaultKeeper::Get().GetLastHint(hint);
 }

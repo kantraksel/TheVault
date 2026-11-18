@@ -4,8 +4,10 @@
 class ShowPasswordModal : public BaseIndexModal
 {
 public:
-	ShowPasswordModal();
+	ShowPasswordModal(class ChangePasswordModal& changePasswordModal);
 
 protected:
 	void OnRender() override;
+
+	ChangePasswordModal& changePasswordModal;
 };

@@ -1,17 +1,20 @@
 #pragma once
 #include <string>
+#include "BlockingApplet.hpp"
 
-class ProcessApplet
+class ProcessApplet : public BlockingApplet
 {
-private:
+protected:
 	std::string title;
-	bool isOpen;
+
+	void OnRender() override;
 
 public:
-	ProcessApplet();
+	static ProcessApplet& Get();
+
+	ProcessApplet(MainWindow& mainWindow);
 	~ProcessApplet();
 
 	void Open(const std::string_view& title);
-	void Close();
-	void Render();
+	void Close() override;
 };

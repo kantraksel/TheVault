@@ -1,8 +1,6 @@
 #include "AddPasswordModal.hpp"
+#include "App/ContentStore.h"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
-
-extern Game game;
 
 AddPasswordModal::AddPasswordModal() : BaseModal("Add Password")
 {
@@ -37,7 +35,7 @@ void AddPasswordModal::OnRender()
 		auto pwd = std::string_view(pwdInput.data());
 		if (!name.empty() && !pwd.empty())
 		{
-			game.GetContentStore().AddText(name, pwd);
+			ContentStore::Get().AddText(name, pwd);
 			Close();
 		}
 	}

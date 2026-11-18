@@ -1,8 +1,7 @@
 #include "DeleteEntryModal.hpp"
+#include "App/ContentStore.h"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
-
-extern Game game;
+#include "Vault/VaultKeeper.h"
 
 DeleteEntryModal::DeleteEntryModal() : BaseDualIndexModal("Delete Password")
 {
@@ -16,21 +15,21 @@ void DeleteEntryModal::OnRender()
 
 	if (!isLockIndex)
 	{
-		auto& store = game.GetContentStore();
+		auto& store = ContentStore::Get();
 		Text(store.GetName(selectedIndex));
 	}
 	else
 	{
-		auto api = game.GetKeeper().GetDirectApi();
+		auto api = VaultKeeper::Get().GetDirectApi();
 		Text(api.GetHint(selectedIndex));
 	}
 
 	if (ImGui::Button("Yes"))
 	{
 		if (!isLockIndex)
-			game.GetContentStore().Remove(selectedIndex);
+			ContentStore::Get().Remove(selectedIndex);
 		else
-			game.GetKeeper().RemoveHint(selectedIndex);
+			VaultKeeper::Get().RemoveHint(selectedIndex);
 		Close();
 	}
 	ImGui::SameLine();

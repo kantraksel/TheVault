@@ -1,14 +1,13 @@
 #include <filesystem>
 #include "ChangeFileModal.hpp"
+#include "ChangeNameModal.hpp"
+#include "ErrorModal.hpp"
+#include "App/ContentStore.h"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
 #include "Utils/WinApi.h"
 #include "Utility/StringUtils.h"
-#include "../Modals.hpp"
 
-extern Game game;
-
-ChangeFileModal::ChangeFileModal() : BaseIndexModal("Change File")
+ChangeFileModal::ChangeFileModal(ChangeNameModal& changeNameModal) : BaseIndexModal("Change File"), changeNameModal(changeNameModal)
 {
 }
 
@@ -20,7 +19,7 @@ void ChangeFileModal::OnClose()
 
 void ChangeFileModal::OnRender()
 {
-	auto& store = game.GetContentStore();
+	auto& store = ContentStore::Get();
 	Text("Name:");
 	ImGui::SameLine();
 	Text(store.GetName(selectedIndex));
@@ -45,7 +44,7 @@ void ChangeFileModal::OnRender()
 		{
 			if (!store.SetFile(selectedIndex, filePath))
 			{
-				Modals::GetErrorModal().Open("Failed to read file - check permissions or logs for more details");
+				ErrorModal::Get().Open("Failed to read file - check permissions or logs for more details");
 			}
 			Close();
 		}
@@ -54,7 +53,7 @@ void ChangeFileModal::OnRender()
 	if (ImGui::Button("Change Name"))
 	{
 		Close();
-		Modals::GetChangeNameModal().Open(selectedIndex);
+		changeNameModal.Open(selectedIndex);
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Cancel"))

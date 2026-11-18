@@ -1,11 +1,10 @@
 #include "ChangeLockPasswordModal.hpp"
+#include "ChangeNameModal.hpp"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
-#include "../Modals.hpp"
+#include "GUI/VaultCommander.hpp"
+#include "Vault/VaultKeeper.h"
 
-extern Game game;
-
-ChangeLockPasswordModal::ChangeLockPasswordModal() : BaseIndexModal("Change Password##ChangeLockPassword"), isProcessing{false}
+ChangeLockPasswordModal::ChangeLockPasswordModal(ChangeNameModal& changeNameModal) : BaseIndexModal("Change Password##ChangeLockPassword"), isProcessing{false}, changeNameModal(changeNameModal)
 {
 	pwdInput.resize(256);
 }
@@ -21,7 +20,7 @@ void ChangeLockPasswordModal::OnRender()
 	Text("Name:");
 	ImGui::SameLine();
 
-	auto& keeper = game.GetKeeper();
+	auto& keeper = VaultKeeper::Get();
 	{
 		auto api = keeper.GetDirectApi();
 		Text(api.GetHint(selectedIndex));
@@ -42,7 +41,7 @@ void ChangeLockPasswordModal::OnRender()
 			if (!pwd.empty())
 			{
 				isProcessing = true;
-				game.GetVaultCommander().SetPassword(selectedIndex, pwd, [this](uint64_t)
+				VaultCommander::Get().SetPassword(selectedIndex, pwd, [this](uint64_t)
 						{
 							Close();
 						});
@@ -54,7 +53,7 @@ void ChangeLockPasswordModal::OnRender()
 		if (ImGui::Button("Change Name"))
 		{
 			Close();
-			Modals::GetChangeNameModal().Open(selectedIndex, true);
+			changeNameModal.Open(selectedIndex, true);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel"))

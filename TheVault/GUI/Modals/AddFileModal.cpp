@@ -1,12 +1,10 @@
 #include <filesystem>
 #include "AddFileModal.hpp"
+#include "ErrorModal.hpp"
+#include "App/ContentStore.h"
 #include "Utils/ImGuiUtils.h"
-#include "App/Game.h"
 #include "Utils/WinApi.h"
 #include "Utility/StringUtils.h"
-#include "../Modals.hpp"
-
-extern Game game;
 
 AddFileModal::AddFileModal() : BaseModal("Add File")
 {
@@ -54,9 +52,9 @@ void AddFileModal::OnRender()
 		if (!filePath.empty())
 		{
 			auto name = std::string_view(nameInput.data());
-			if (!game.GetContentStore().AddFile(name, filePath))
+			if (!ContentStore::Get().AddFile(name, filePath))
 			{
-				Modals::GetErrorModal().Open("Failed to read file - check permissions or logs for more details");
+				ErrorModal::Get().Open("Failed to read file - check permissions or logs for more details");
 			}
 			Close();
 		}

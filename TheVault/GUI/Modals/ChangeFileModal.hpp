@@ -5,7 +5,7 @@
 class ChangeFileModal : public BaseIndexModal
 {
 public:
-	ChangeFileModal();
+	ChangeFileModal(class ChangeNameModal& changeNameModal);
 
 protected:
 	void OnRender() override;
@@ -13,4 +13,5 @@ protected:
 
 	std::wstring filePath;
 	std::string fileName;
+	ChangeNameModal& changeNameModal;
 };

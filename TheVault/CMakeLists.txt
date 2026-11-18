@@ -10,6 +10,7 @@ add_executable(TheVault WIN32
 			Vault/WorkerThread.cpp
 			GUI/GUIManager.cpp
 			GUI/MainWindow.cpp
+			GUI/Applets/BlockingApplet.cpp
 			GUI/Applets/LockApplet.cpp
 			GUI/Applets/LoginApplet.cpp
 			GUI/Applets/ProcessApplet.cpp
@@ -29,7 +30,6 @@ add_executable(TheVault WIN32
 			GUI/Modals/BaseDualIndexModal.cpp
 			GUI/Modals/AddLockModal.cpp
 			GUI/Modals/ChangeLockPasswordModal.cpp
-			GUI/Modals.cpp
 			GUI/ReactiveScheduler.cpp
 			GUI/VaultCommander.cpp
 )

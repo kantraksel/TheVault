@@ -1,15 +1,16 @@
 #include "MainWindow.h"
+#include "VaultCommander.hpp"
+#include "App/ContentStore.h"
 #include "Utils/ImGuiUtils.h"
 #include "Utils/WinApi.h"
 #include "Utility/StringUtils.h"
-#include "App/Game.h"
-#include "Engine/GhostFries.h"
 
-extern Game game;
-
-MainWindow::MainWindow()
+MainWindow::MainWindow() : lockApplet(deleteEntryModal, changeNameModal), loginApplet(*this), welcomeApplet(*this),
+                           processApplet(*this), showPasswordWarningModal(showPasswordModal),
+                           showPasswordModal(changePasswordModal), changePasswordModal(changeNameModal),
+                           changeFileModal(changeNameModal)
 {
-	isDisabled = true;
+	disabledCount = 0;
 	welcomeApplet.Open();
 }
 
@@ -30,19 +31,28 @@ void MainWindow::Render()
 		loginApplet.Render();
 		welcomeApplet.Render();
 		processApplet.Render();
-		modals.Render();
+		addPasswordModal.Render();
+		addFileModal.Render();
+		showPasswordWarningModal.Render();
+		showPasswordModal.Render();
+		changePasswordModal.Render();
+		changeFileModal.Render();
+		changeNameModal.Render();
+		deleteEntryModal.Render();
+		confirmExitModal.Render();
+		errorModal.Render();
 		RenderDemoBar();
 	}
 	
 	ImGui::End();
 
-	game.GetVaultCommander().Update();
+	VaultCommander::Get().Update();
 }
 
 void MainWindow::RenderMainArea()
 {
 	bool hasDisabledStarted = false;
-	if (isDisabled)
+	if (disabledCount)
 	{
 		hasDisabledStarted = true;
 		ImGui::BeginDisabled();
@@ -57,7 +67,7 @@ void MainWindow::RenderMainArea()
 		ImGui::TableSetupColumn("Actions");
 		ImGui::TableHeadersRow();
 
-		auto& store = game.GetContentStore();
+		auto& store = ContentStore::Get();
 		auto lock = store.AcquireAccessLock();
 		int hintCount = store.GetCount();
 		for (int i = 0; i < hintCount; ++i)
@@ -72,7 +82,7 @@ void MainWindow::RenderMainArea()
 			if (store.IsText(i))
 			{
 				if (ImGui::Button("Show"))
-					Modals::GetShowPasswordWarningModal().Open(i);
+					showPasswordWarningModal.Open(i);
 				ImGui::SameLine();
 				if (ImGui::Button("Copy"))
 				{
@@ -81,7 +91,7 @@ void MainWindow::RenderMainArea()
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Change"))
-					Modals::GetChangePasswordModal().Open(i);
+					changePasswordModal.Open(i);
 
 				if (ImGui::BeginPopup("password_copied"))
 				{
@@ -106,18 +116,18 @@ void MainWindow::RenderMainArea()
 					{
 						if (!store.ExtractFile(i, fileName))
 						{
-							Modals::GetErrorModal().Open("Failed to extract file - check permissions or logs for more details");
+							errorModal.Open("Failed to extract file - check permissions or logs for more details");
 						}
 					}
 				}
 				ImGui::SameLine();
 				if (ImGui::Button("Change"))
-					Modals::GetChangeFileModal().Open(i);
+					changeFileModal.Open(i);
 			}
 
 			ImGui::SameLine();
 			if (ImGui::Button("Delete"))
-				Modals::GetDeleteEntryModal().Open(i);
+				deleteEntryModal.Open(i);
 
 			ImGui::PopID();
 		}
@@ -125,10 +135,10 @@ void MainWindow::RenderMainArea()
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
 		if (ImGui::Button("Add Password"))
-			Modals::GetAddPasswordModal().Open();
+			addPasswordModal.Open();
 		ImGui::SameLine();
 		if (ImGui::Button("Add File"))
-			Modals::GetAddFileModal().Open();
+			addFileModal.Open();
 
 		ImGui::TableNextColumn();
 		ImGui::BeginDisabled();
@@ -166,13 +176,13 @@ void MainWindow::RenderMenuBar()
 			}
 
 			if (ImGui::MenuItem("Save", "Ctrl+S"))
-				game.GetVaultCommander().SaveVault();
+				VaultCommander::Get().SaveVault();
 			if (ImGui::MenuItem("Close"))
-				game.GetVaultCommander().TryCloseVault();
+				VaultCommander::Get().TryCloseVault();
 
 			ImGui::Separator();
 			if (ImGui::MenuItem("Exit"))
-				game.GetVaultCommander().TryCloseVault(true);
+				VaultCommander::Get().TryCloseVault(true);
 
 			ImGui::EndMenu();
 		}
@@ -202,17 +212,18 @@ void MainWindow::ProcessShortcuts()
 	}
 
 	if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
-		game.GetVaultCommander().SaveVault();
+		VaultCommander::Get().SaveVault();
 }
 
 void MainWindow::DisableInteractions()
 {
-	isDisabled = true;
+	++disabledCount;
 }
 
 void MainWindow::EnableInteractions()
 {
-	isDisabled = false;
+	if (disabledCount)
+		--disabledCount;
 }
 
 void MainWindow::RenderDemoBar()

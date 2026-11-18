@@ -4,6 +4,7 @@
 class ConfirmExitModal : public BaseModal
 {
 public:
+	static ConfirmExitModal& Get();
 	ConfirmExitModal();
 
 	void Open() override;

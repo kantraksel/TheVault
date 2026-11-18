@@ -23,7 +23,7 @@ public:
 	WorkerThread();
 	~WorkerThread();
 
-	void Init();
+	void Initialize();
 	void Shutdown();
 
 	Future SendCmd(const std::function<uint64_t()>& f);

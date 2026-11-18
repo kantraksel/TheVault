@@ -1,7 +1,5 @@
 #include "WorkerThread.h"
-#include "App/Game.h"
 
-extern Game game;
 using Future = WorkerThread::Future;
 
 struct Task
@@ -19,7 +17,7 @@ WorkerThread::~WorkerThread()
 	Shutdown();
 }
 
-void WorkerThread::Init()
+void WorkerThread::Initialize()
 {
 	if (thread.joinable())
 		return;

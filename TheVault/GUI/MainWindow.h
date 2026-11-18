@@ -3,7 +3,16 @@
 #include "Applets/LoginApplet.h"
 #include "Applets/WelcomeApplet.h"
 #include "Applets/ProcessApplet.h"
-#include "Modals.hpp"
+#include "Modals/AddFileModal.hpp"
+#include "Modals/AddPasswordModal.hpp"
+#include "Modals/ChangeFileModal.hpp"
+#include "Modals/ChangeNameModal.hpp"
+#include "Modals/ChangePasswordModal.hpp"
+#include "Modals/ConfirmExitModal.hpp"
+#include "Modals/DeleteEntryModal.hpp"
+#include "Modals/ErrorModal.hpp"
+#include "Modals/ShowPasswordModal.hpp"
+#include "Modals/ShowPasswordWarningModal.hpp"
 
 class MainWindow
 {
@@ -12,8 +21,17 @@ private:
 	LoginApplet loginApplet;
 	WelcomeApplet welcomeApplet;
 	ProcessApplet processApplet;
-	Modals modals;
-	bool isDisabled;
+	AddPasswordModal addPasswordModal;
+	AddFileModal addFileModal;
+	ShowPasswordWarningModal showPasswordWarningModal;
+	ShowPasswordModal showPasswordModal;
+	ChangePasswordModal changePasswordModal;
+	ChangeFileModal changeFileModal;
+	ChangeNameModal changeNameModal;
+	DeleteEntryModal deleteEntryModal;
+	ConfirmExitModal confirmExitModal;
+	ErrorModal errorModal;
+	int disabledCount;
 
 	void RenderMainArea();
 	void RenderMenuBar();
@@ -21,6 +39,8 @@ private:
 	void RenderDemoBar();
 
 public:
+	static MainWindow& Get();
+
 	MainWindow();
 	~MainWindow();
 
@@ -48,8 +68,13 @@ public:
 		return processApplet;
 	}
 
-	auto& GetModals()
+	auto& GetErrorModal()
 	{
-		return modals;
+		return errorModal;
+	}
+
+	auto& GetConfirmExitModal()
+	{
+		return confirmExitModal;
 	}
 };

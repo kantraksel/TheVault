@@ -1,22 +1,25 @@
 #pragma once
 #include <string>
+#include "BlockingApplet.hpp"
 
-class LoginApplet
+class LoginApplet : public BlockingApplet
 {
 protected:
 	std::string passwordInput;
 	std::string hint;
-	bool isOpen;
 	bool firstFrameDraw;
 	bool isProcessing;
 
+	void OnRender() override;
+
 public:
-	LoginApplet();
+	static LoginApplet& Get();
+
+	LoginApplet(MainWindow& mainWindow);
 	~LoginApplet();
 
-	void Open();
-	void Close();
-	void Render();
+	void Open() override;
+	void Close() override;
 	void RefreshHintName();
 
 	bool IsOpen()

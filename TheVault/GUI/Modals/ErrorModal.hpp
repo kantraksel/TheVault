@@ -5,6 +5,8 @@
 class ErrorModal : public BaseModal
 {
 public:
+	static ErrorModal& Get();
+
 	ErrorModal();
 	void Open(const std::string_view& message, bool critical = false);
 
