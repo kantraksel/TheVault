@@ -165,15 +165,11 @@ void MainWindow::RenderMenuBar()
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			if (ImGui::MenuItem("New", nullptr, false, false))
-			{
+			if (ImGui::MenuItem("New"))
+				VaultCommander::Get().CreateVault();
 
-			}
-
-			if (ImGui::MenuItem("Open", "Ctrl+O", false, false))
-			{
-
-			}
+			if (ImGui::MenuItem("Open", "Ctrl+O"))
+				VaultCommander::Get().OpenVault();
 
 			if (ImGui::MenuItem("Save", "Ctrl+S"))
 				VaultCommander::Get().SaveVault();
@@ -207,9 +203,7 @@ void MainWindow::RenderMenuBar()
 void MainWindow::ProcessShortcuts()
 {
 	if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O))
-	{
-
-	}
+		VaultCommander::Get().OpenVault();
 
 	if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S))
 		VaultCommander::Get().SaveVault();

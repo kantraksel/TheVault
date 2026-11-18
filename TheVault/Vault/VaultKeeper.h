@@ -23,7 +23,8 @@ private:
 
 	std::vector<Layer> mChain;
 	std::mutex chainMutex;
-	std::wstring file; //used only in the thread
+	std::wstring file;
+	std::mutex fileMutex;
 
 	Vault vault;
 	WorkerThread worker;
@@ -45,7 +46,8 @@ public:
 	Future OpenVault(const std::wstring& file);
 	Future CreateVault(const std::wstring& file);
 	Future CloseVault();
-	Future SaveVault();
+	Future SaveVault(const std::wstring& file);
+	std::wstring GetVaultPath();
 
 	void GetLastHint(std::string& str);
 	Future SubmitPassword(const std::string_view& password);

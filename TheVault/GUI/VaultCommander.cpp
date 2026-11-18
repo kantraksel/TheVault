@@ -1,11 +1,10 @@
 #include "VaultCommander.hpp"
-#include "Applets/LockApplet.h"
 #include "Applets/LoginApplet.h"
 #include "Applets/ProcessApplet.h"
-#include "Applets/WelcomeApplet.h"
 #include "Engine/GhostFries.h"
 #include "Modals/ConfirmExitModal.hpp"
 #include "Modals/ErrorModal.hpp"
+#include "Utils/WinApi.h"
 #include "Vault/VaultKeeper.h"
 
 VaultCommander::VaultCommander(UnsavedState& unsavedState) : unsavedState{unsavedState}
@@ -29,32 +28,37 @@ void VaultCommander::ShowError(const std::string_view& text, bool critical)
 	});
 }
 
-void VaultCommander::CreateVault(const std::wstring& file)
+bool VaultCommander::CreateVault()
 {
+	std::wstring file;
+	if (!WinApi::SaveFileDialog(L"Create new vault", L"vault.bin", file))
+		return false;
+
 	ProcessVaultTask(VaultKeeper::Get().CreateVault(file),
 		[this](uint64_t)
 		{
-			ProcessVaultTask(VaultKeeper::Get().SaveVault(),
+			ProcessVaultTask(VaultKeeper::Get().SaveVault(VaultKeeper::Get().GetVaultPath()),
 				[this](uint64_t)
 				{
 					unsavedState.NotifyChange();
-					LockApplet::Get().Open();
 				});
 		});
+	return true;
 }
 
-void VaultCommander::OpenVault(const std::wstring& file)
+bool VaultCommander::OpenVault()
 {
+	std::wstring file;
+	if (!WinApi::OpenFileDialog(L"Open existing vault", L"vault.bin", file))
+		return false;
+
 	ProcessVaultTask(VaultKeeper::Get().OpenVault(file),
 		[](uint64_t result)
 		{
 			switch (result)
 			{
 				case VaultKeeper::Failed:
-				{
-					WelcomeApplet::Get().Open();
 					break;
-				}
 
 				case VaultKeeper::UnlockRequired:
 				{
@@ -73,12 +77,14 @@ void VaultCommander::OpenVault(const std::wstring& file)
 				}
 			}
 		});
+	return true;
 }
 
 void VaultCommander::SaveVault(bool closeVault, bool exitApp)
 {
+	auto& keeper = VaultKeeper::Get();
 	{
-		auto api = VaultKeeper::Get().GetDirectApi();
+		auto api = keeper.GetDirectApi();
 		int count = api.GetHintCount();
 		if (count == 0)
 		{
@@ -96,16 +102,17 @@ void VaultCommander::SaveVault(bool closeVault, bool exitApp)
 		}
 	}
 
-	ProcessVaultTask(VaultKeeper::Get().SaveVault(),
+	auto file = keeper.GetVaultPath();
+	if (file.empty() && !WinApi::SaveFileDialog(L"Save vault", L"vault.bin", file))
+		return;
+
+	ProcessVaultTask(keeper.SaveVault(file),
 		[=, this](uint64_t result)
 		{
 			switch (result)
 			{
 				case VaultKeeper::Failed:
-				{
-					LockApplet::Get().Open();
 					break;
-				}
 
 				case VaultKeeper::Success:
 				{
@@ -138,7 +145,6 @@ void VaultCommander::CloseVault(bool exitApp)
 	ProcessVaultTask(VaultKeeper::Get().CloseVault(),
 		[=](uint64_t)
 		{
-			WelcomeApplet::Get().Open();
 			if (exitApp)
 				GhostFries::Quit();
 		},

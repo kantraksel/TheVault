@@ -12,7 +12,6 @@ using Future = VaultKeeper::Future;
 
 VaultKeeper::VaultKeeper(ContentStore& store, UnsavedState& unsavedState) : store{store}, unsavedState{unsavedState}
 {
-	file = L"vault.bin";
 	mChain.reserve(16);
 }
 
@@ -42,6 +41,10 @@ Future VaultKeeper::OpenVault(const std::wstring& file)
 				return Failed;
 			}
 			Logger::Log(L"Opened vault {}", file);
+			{
+				std::lock_guard lock(fileMutex);
+				this->file = file;
+			}
 
 			auto& block = vault.GetBlock();
 			if (block)
@@ -58,7 +61,6 @@ Future VaultKeeper::OpenVault(const std::wstring& file)
 				return Success;
 			}
 
-			this->file = file;
 			{
 				auto& hint = vault.GetStepName();
 
@@ -79,6 +81,7 @@ Future VaultKeeper::CreateVault(const std::wstring& file)
 			Logger::Log("Preparing new vault");
 
 			ResetState();
+			std::lock_guard lock(fileMutex);
 			this->file = file;
 
 			unsavedState.NotifyChange();
@@ -106,7 +109,8 @@ void VaultKeeper::ResetState()
 	vault.Reset();
 	store.Reset();
 	unsavedState.ClearChange();
-	this->file = L"vault.bin";
+	std::lock_guard lock(fileMutex);
+	file.clear();
 }
 
 void VaultKeeper::GetLastHint(std::string& str)
@@ -225,7 +229,7 @@ Future VaultKeeper::SetHintKey(int i, const std::string_view& password)
 		}, SecureArray::CreateRef(password.data(), password.size()));
 }
 
-Future VaultKeeper::SaveVault()
+Future VaultKeeper::SaveVault(const std::wstring& file)
 {
 	return worker.SendCmd([=, this]() -> uint64_t
 			{
@@ -247,15 +251,18 @@ Future VaultKeeper::SaveVault()
 				vault.Reset();
 				vault.ResetSteps();
 
-				for (auto& layer : mChain)
 				{
-					auto hint = SecureArray::CreateRef(layer.hint.data(), layer.hint.size());
-
-					if (!vault.AddStep(hint, layer.key, layer.salt))
+					std::lock_guard lock(chainMutex);
+					for (auto& layer : mChain)
 					{
-						vault.Reset();
-						RaiseError("Failed to set vault layers");
-						return Failed;
+						auto hint = SecureArray::CreateRef(layer.hint.data(), layer.hint.size());
+
+						if (!vault.AddStep(hint, layer.key, layer.salt))
+						{
+							vault.Reset();
+							RaiseError("Failed to set vault layers");
+							return Failed;
+						}
 					}
 				}
 
@@ -264,6 +271,8 @@ Future VaultKeeper::SaveVault()
 				Crypto::ZeroMemory(block);
 				block.copyFrom(content);
 
+				std::lock_guard lock(fileMutex);
+				this->file = file;
 				if (!vault.Place(file))
 				{
 					vault.Reset();
@@ -320,4 +329,10 @@ void VaultKeeper::ChangeHint(int i, const std::string_view& hint)
 
 	mChain[i].hint = hint;
 	unsavedState.NotifyChange();
+}
+
+std::wstring VaultKeeper::GetVaultPath()
+{
+	std::lock_guard lock(fileMutex);
+	return file;
 }

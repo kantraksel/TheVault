@@ -17,8 +17,8 @@ public:
 	~VaultCommander();
 	void Update();
 
-	void CreateVault(const std::wstring& file);
-	void OpenVault(const std::wstring& file);
+	bool CreateVault();
+	bool OpenVault();
 	void SaveVault(bool closeVault = false, bool exitApp = false);
 	void CloseVault(bool exitApp = false);
 	void TryCloseVault(bool exitApp = false);
