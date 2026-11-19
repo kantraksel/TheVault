@@ -1,0 +1,7 @@
+#include "App/version.hpp"
+
+#define COMMIT_SHORT "@COMMIT_HASH_SHORT@"
+#define VERSION_CORE "@PROJECT_VERSION@"
+
+const char* Version::FullString = VERSION_CORE "+" COMMIT_SHORT;
+const char* Version::BuildTime = __DATE__ " " __TIME__;

@@ -6,7 +6,7 @@
 #include "Utility/StringUtils.h"
 
 MainWindow::MainWindow() : lockApplet(deleteEntryModal, changeNameModal), loginApplet(*this), welcomeApplet(*this),
-                           processApplet(*this), showPasswordWarningModal(showPasswordModal),
+                           processApplet(*this), aboutApplet(*this), showPasswordWarningModal(showPasswordModal),
                            showPasswordModal(changePasswordModal), changePasswordModal(changeNameModal),
                            changeFileModal(changeNameModal)
 {
@@ -31,6 +31,7 @@ void MainWindow::Render()
 		loginApplet.Render();
 		welcomeApplet.Render();
 		processApplet.Render();
+		aboutApplet.Render();
 		addPasswordModal.Render();
 		addFileModal.Render();
 		showPasswordWarningModal.Render();
@@ -191,10 +192,8 @@ void MainWindow::RenderMenuBar()
 				lockApplet.Open();
 		}
 
-		if (ImGui::MenuItem("About", nullptr, false, false))
-		{
-
-		}
+		if (ImGui::MenuItem("About"))
+			aboutApplet.Open();
 
 		ImGui::EndMenuBar();
 	}

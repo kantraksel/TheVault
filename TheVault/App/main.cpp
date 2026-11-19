@@ -11,6 +11,7 @@
 #include "Vault/VaultKeeper.h"
 #include "ContentStore.h"
 #include "UnsavedState.h"
+#include "version.hpp"
 
 class Game : public IGame
 {
@@ -33,6 +34,7 @@ Game::Game() : commander(unsavedState), keeper(contentStore, unsavedState), cont
 
 bool Game::OnInitialize()
 {
+	Logger::Log("TheVault version {} (built on {})", Version::FullString, Version::BuildTime);
 	GhostFries::GetWindowManager().SetCloseCallback([this]
 		{
 			commander.TryCloseVault(true);

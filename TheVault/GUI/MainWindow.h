@@ -1,4 +1,5 @@
 #pragma once
+#include "Applets/AboutApplet.hpp"
 #include "Applets/LockApplet.h"
 #include "Applets/LoginApplet.h"
 #include "Applets/WelcomeApplet.h"
@@ -21,6 +22,7 @@ private:
 	LoginApplet loginApplet;
 	WelcomeApplet welcomeApplet;
 	ProcessApplet processApplet;
+	AboutApplet aboutApplet;
 	AddPasswordModal addPasswordModal;
 	AddFileModal addFileModal;
 	ShowPasswordWarningModal showPasswordWarningModal;

@@ -1,7 +1,11 @@
+execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE COMMIT_HASH_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+configure_file(App/version.cpp.in App/version.cpp)
+
 add_definitions(-DUNICODE -D_UNICODE)
 add_executable(TheVault WIN32
 			App/main.cpp
 			App/ContentStore.cpp
+			App/version.cpp
 			Utils/StringUtils.cpp
 			Utils/WinApi.cpp
 			Vault/Crypto.cpp
@@ -10,6 +14,7 @@ add_executable(TheVault WIN32
 			Vault/WorkerThread.cpp
 			GUI/GUIManager.cpp
 			GUI/MainWindow.cpp
+			GUI/Applets/AboutApplet.cpp
 			GUI/Applets/BlockingApplet.cpp
 			GUI/Applets/LockApplet.cpp
 			GUI/Applets/LoginApplet.cpp
