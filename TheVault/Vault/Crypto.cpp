@@ -4,9 +4,9 @@
 const size_t Crypto::PwMinSize = crypto_pwhash_BYTES_MIN;
 const size_t Crypto::PwMaxSize = crypto_pwhash_BYTES_MAX;
 const size_t Crypto::PwSaltSize = crypto_pwhash_SALTBYTES;
-const size_t Crypto::ChestKeySize = crypto_secretbox_KEYBYTES;
-const size_t Crypto::ChestNonceSize = crypto_secretbox_NONCEBYTES;
-const size_t Crypto::ChestExtraSize = crypto_secretbox_MACBYTES;
+const size_t Crypto::ChestKeySize = crypto_aead_xchacha20poly1305_IETF_KEYBYTES;
+const size_t Crypto::ChestNonceSize = crypto_aead_xchacha20poly1305_IETF_NPUBBYTES;
+const size_t Crypto::ChestExtraSize = crypto_aead_xchacha20poly1305_IETF_ABYTES;
 
 bool Crypto::Init()
 {
@@ -28,7 +28,7 @@ SecureArray Crypto::HashPassword(const std::string_view& password, const SecureA
 	if (password.size() < crypto_pwhash_PASSWD_MIN || password.size() > crypto_pwhash_PASSWD_MAX || salt.size() != crypto_pwhash_SALTBYTES)
 		return nullptr;
 
-	auto hash = SecureArray(crypto_secretbox_KEYBYTES);
+	auto hash = SecureArray(ChestKeySize);
 
 #if _DEBUG
 	constexpr uint64_t OpsLimit = crypto_pwhash_OPSLIMIT_INTERACTIVE;
@@ -47,11 +47,11 @@ SecureArray Crypto::HashPassword(const std::string_view& password, const SecureA
 
 SecureArray Crypto::CreateChest(const SecureArray& content, const SecureArray& key, const SecureArray& nonce)
 {
-	if (content.empty() || content.size() > static_cast<size_t>(INT64_MAX) || key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES)
+	if (content.empty() || content.size() > static_cast<size_t>(INT64_MAX) || key.size() != ChestKeySize || nonce.size() != ChestNonceSize)
 		return nullptr;
 
-	auto chest = SecureArray(content.size() + crypto_secretbox_MACBYTES);
-	int result = crypto_secretbox_easy(chest.data(), content.data(), content.size(), nonce.data(), key.data());
+	auto chest = SecureArray(content.size() + ChestExtraSize);
+	int result = crypto_aead_xchacha20poly1305_ietf_encrypt(chest.data(), nullptr, content.data(), content.size(), nullptr, 0, nullptr, nonce.data(), key.data());
 	if (result < 0)
 		return nullptr;
 
@@ -60,10 +60,10 @@ SecureArray Crypto::CreateChest(const SecureArray& content, const SecureArray& k
 
 bool Crypto::OpenChestInPlace(SecureArray& chest, const SecureArray& key, const SecureArray& nonce)
 {
-	if (key.size() != crypto_secretbox_KEYBYTES || nonce.size() != crypto_secretbox_NONCEBYTES || chest.size() <= crypto_secretbox_MACBYTES)
+	if (key.size() != ChestKeySize || nonce.size() != ChestNonceSize || chest.size() <= ChestExtraSize)
 		return false;
 
-	int result = crypto_secretbox_open_easy(chest.data(), chest.data(), chest.size(), nonce.data(), key.data());
+	int result = crypto_aead_xchacha20poly1305_ietf_decrypt(chest.data(), nullptr, nullptr, chest.data(), chest.size(), nullptr, 0, nonce.data(), key.data());
 	if (result < 0)
 		return false;
 

@@ -1,4 +1,5 @@
 #include <optional>
+#include <filesystem>
 #include "VaultKeeper.h"
 #include "WorkerThread.h"
 #include "Vault.h"
@@ -10,7 +11,7 @@
 
 using Future = VaultKeeper::Future;
 
-VaultKeeper::VaultKeeper(ContentStore& store, UnsavedState& unsavedState) : store{store}, unsavedState{unsavedState}
+VaultKeeper::VaultKeeper(ContentStore& store, UnsavedState& unsavedState) : store{store}, unsavedState{unsavedState}, hasBackup{false}
 {
 	mChain.reserve(16);
 }
@@ -109,8 +110,11 @@ void VaultKeeper::ResetState()
 	vault.Reset();
 	store.Reset();
 	unsavedState.ClearChange();
-	std::lock_guard lock(fileMutex);
-	file.clear();
+	{
+		std::lock_guard lock(fileMutex);
+		file.clear();
+	}
+	hasBackup = false;
 }
 
 void VaultKeeper::GetLastHint(std::string& str)
@@ -273,8 +277,9 @@ Future VaultKeeper::SaveVault(const std::wstring& file)
 
 				std::lock_guard lock(fileMutex);
 				this->file = file;
-				if (!vault.Place(file))
+				if (!CreateBackup(file) || !vault.Place(file))
 				{
+					RestoreBackup(file);
 					vault.Reset();
 					RaiseError(std::format("Failed to place vault in {}", StringUtils::WideStringToUtf8(file)));
 					return Failed;
@@ -286,6 +291,46 @@ Future VaultKeeper::SaveVault(const std::wstring& file)
 				unsavedState.ClearChange();
 				return Success;
 			});
+}
+
+bool VaultKeeper::CreateBackup(const std::wstring_view& file)
+{
+	if (hasBackup)
+	{
+		Logger::Log("Skipped creating backup - original backup exists");
+		return true;
+	}
+
+	std::error_code ec;
+	if (std::filesystem::exists(file, ec))
+	{
+		auto bakFile = std::format(L"{}.bak", file);
+		std::filesystem::remove(bakFile, ec);
+		std::filesystem::rename(file, bakFile, ec);
+		if (ec)
+		{
+			Logger::LogError(L"Failed to create backup at {}: {}", bakFile, ec.value());
+			return false;
+		}
+		Logger::Log(L"Created backup at {}", bakFile);
+		hasBackup = true;
+	}
+	else
+		Logger::LogWarn("Failed to create backup - file doesn't exist yet");
+	return true;
+}
+
+void VaultKeeper::RestoreBackup(const std::wstring_view& file)
+{
+	if (!hasBackup)
+		return;
+
+	hasBackup = false;
+	std::error_code ec;
+	auto bakFile = std::format(L"{}.bak", file);
+	std::filesystem::remove(file, ec);
+	std::filesystem::rename(bakFile, file, ec);
+	Logger::Log(L"Restored backup from {}", bakFile);
 }
 
 int VaultKeeper::DirectApi::GetHintCount()

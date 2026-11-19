@@ -4,13 +4,13 @@ This document describes simplified vault structure, some of the more important s
 ## The Vault Structure
 1. User sets container passwords, which are immediately hashed using password hashing algorithm `Argon2id`
 2. User adds passwords, files and other strings, which are put together in a YAML document
-3. The document is encrypted using AEAD algorithm `XSalsa20-Poly1305`
+3. The document is encrypted using AEAD algorithm `XChaCha20-Poly1305`
 4. Encryption step is repeated for each password on cipher with metadata
 5. Additionally last layer is obfuscated using the AEAD algorithm
 
 ## Security Considerations
 - `Poly1305` resists cipher tampering attemps if key and nonce pair is used only once.
-- `XSalsa20` is still a strong symmetric encryption algorithm, although `ChaCha20` and it's variants are more widely used.
+- `XChaCha20` is a variant of `ChaCha20`, a strong symmetric encryption algorithm widely used in internet communication industry. This variant uses longer nonce.
 - Nonces are used only once per layer for each vault instance. There's no practical limit on generated messages with the same key, as the nonce is 192-bit cryptographically random value.
 - `Argon2id` is used with single-use salts, providing resiliency against known password attacks.
 - User is required to provide several strong passwords and some obfuscation pass phrases before them. See minimums below.

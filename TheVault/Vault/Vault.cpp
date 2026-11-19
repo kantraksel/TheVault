@@ -1,4 +1,3 @@
-#include <filesystem>
 #include "Vault.h"
 #include "Crypto.h"
 #include "Files/Container.h"
@@ -7,7 +6,7 @@
 struct VaultHeader
 {
 	static constexpr unsigned short Magic = 0x5645;
-	static constexpr unsigned short Version = 3;
+	static constexpr unsigned short Version = 4;
 };
 
 Vault::Vault()
@@ -84,16 +83,6 @@ bool Vault::ReadLockStep()
 
 bool Vault::Place(const std::wstring_view& file)
 {
-	std::error_code ec;
-	auto bakFile = std::format(L"{}.bak", file);
-	std::filesystem::remove(bakFile, ec);
-	if (std::filesystem::exists(file, ec))
-	{
-		std::filesystem::rename(file, bakFile, ec);
-		if (ec)
-			return false;
-	}
-
 	FileStream stream;
 	if (!stream.OpenWrite(file))
 		return false;

@@ -30,9 +30,13 @@ private:
 	WorkerThread worker;
 	class ContentStore& store;
 	UnsavedState& unsavedState;
+	bool hasBackup;
 
 	void ResetState();
 	uint64_t RaiseError(const std::string_view& msg, bool critical = false);
+
+	bool CreateBackup(const std::wstring_view& file);
+	void RestoreBackup(const std::wstring_view& file);
 
 public:
 	static VaultKeeper& Get();
