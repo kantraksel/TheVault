@@ -16,6 +16,7 @@ void DeleteEntryModal::OnRender()
 	if (!isLockIndex)
 	{
 		auto& store = ContentStore::Get();
+		std::lock_guard lock(store.GetAccessLock());
 		Text(store.GetName(selectedIndex));
 	}
 	else

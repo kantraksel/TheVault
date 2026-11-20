@@ -10,9 +10,13 @@ ChangeNameModal::ChangeNameModal() : BaseDualIndexModal("Change Name")
 
 void ChangeNameModal::OnOpen()
 {
-	std::string_view name;
+	std::string name;
 	if (!isLockIndex)
-		name = ContentStore::Get().GetName(selectedIndex);
+	{
+		auto& store = ContentStore::Get();
+		std::lock_guard lock(store.GetAccessLock());
+		name = store.GetName(selectedIndex);
+	}
 	else
 		name = VaultKeeper::Get().GetDirectApi().GetHint(selectedIndex);
 

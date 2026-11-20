@@ -20,6 +20,7 @@ void ChangeFileModal::OnClose()
 void ChangeFileModal::OnRender()
 {
 	auto& store = ContentStore::Get();
+	std::lock_guard lock(store.GetAccessLock());
 	Text("Name:");
 	ImGui::SameLine();
 	Text(store.GetName(selectedIndex));

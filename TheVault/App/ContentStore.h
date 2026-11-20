@@ -42,5 +42,8 @@ public:
 	SecureArray Serialize();
 	bool Deserialize(const SecureArray& data);
 
-	std::unique_lock<std::mutex> AcquireAccessLock();
+	std::mutex& GetAccessLock()
+	{
+		return accessMutex;
+	}
 };

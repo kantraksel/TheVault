@@ -69,7 +69,7 @@ void MainWindow::RenderMainArea()
 		ImGui::TableHeadersRow();
 
 		auto& store = ContentStore::Get();
-		auto lock = store.AcquireAccessLock();
+		std::lock_guard lock(store.GetAccessLock());
 		int hintCount = store.GetCount();
 		for (int i = 0; i < hintCount; ++i)
 		{

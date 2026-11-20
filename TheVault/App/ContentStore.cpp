@@ -29,6 +29,7 @@ ContentStore::~ContentStore()
 
 void ContentStore::Reset()
 {
+	std::lock_guard lock(accessMutex);
 	mStore.clear();
 }
 
@@ -103,6 +104,7 @@ static SecureArray CopyPassword(const std::string_view& password)
 
 void ContentStore::Remove(int i)
 {
+	std::lock_guard lock(accessMutex);
 	if (!CheckBounds(i))
 		return;
 
@@ -123,6 +125,7 @@ void ContentStore::Remove(int i)
 
 void ContentStore::AddText(const std::string_view& name, const std::string_view& password)
 {
+	std::lock_guard lock(accessMutex);
 	int i = Add(name);
 	SetText(i, password);
 }
@@ -140,6 +143,7 @@ void ContentStore::SetText(int i, const std::string_view& password)
 
 void ContentStore::SetName(int i, const std::string_view& name)
 {
+	std::lock_guard lock(accessMutex);
 	if (!CheckBounds(i))
 		return;
 
@@ -149,6 +153,7 @@ void ContentStore::SetName(int i, const std::string_view& name)
 
 bool ContentStore::AddFile(const std::string_view& name, const std::wstring_view& file)
 {
+	std::lock_guard lock(accessMutex);
 	int i = Add(name);
 	return SetFile(i, file);
 }
@@ -252,7 +257,13 @@ SecureArray ContentStore::Serialize()
 	doc["version"] = DocumentVersion;
 	auto node = doc["password"].SetMap();
 
-	for (auto& pass : mStore)
+	std::vector<Pass> store;
+	{
+		std::lock_guard lock(accessMutex);
+		store = mStore;
+	}
+
+	for (auto& pass : store)
 	{
 		if (pass.type == PassType::Text)
 		{
@@ -380,12 +391,7 @@ bool ContentStore::Deserialize(const SecureArray& data)
 		else
 			Logger::LogWarn("Invalid type of entry {} - not an object", n.GetKey());
 	}
-	auto lock = AcquireAccessLock();
+	std::lock_guard lock(accessMutex);
 	mStore = std::move(store);
 	return true;
-}
-
-std::unique_lock<std::mutex> ContentStore::AcquireAccessLock()
-{
-	return std::unique_lock(accessMutex);
 }
