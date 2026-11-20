@@ -2,7 +2,7 @@
 #include "App/ContentStore.h"
 #include "Utils/ImGuiUtils.h"
 
-AddPasswordModal::AddPasswordModal() : BaseModal("Add Password")
+AddPasswordModal::AddPasswordModal() : BaseModal("Add Password"), isPasswordShown{false}
 {
 	nameInput.resize(256);
 	pwdInput.resize(256);
@@ -27,8 +27,13 @@ void AddPasswordModal::OnRender()
 	TextWidget("Value:");
 	ImGui::SameLine();
 
-	constexpr auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
+	auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoUndoRedo;
+	if (!isPasswordShown)
+		flags = flags | ImGuiInputTextFlags_Password;
 	bool submit = ImGui::InputText("##Password", pwdInput.data(), pwdInput.size() - 1, flags);
+	SameInnerLine();
+	ImGui::Button("*");
+	isPasswordShown = ImGui::IsItemHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Left);
 	if (ImGui::Button("Add") || submit)
 	{
 		auto name = std::string_view(nameInput.data());

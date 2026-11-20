@@ -14,12 +14,12 @@ static void SetNextLabelAlign(const char* label, float maxSize = 320.0f)
 	ImGui::SetNextItemWidth(width);
 }
 
-static void SetNextRightButtonAlign(const char* label)
+static void SetNextRightButtonAlign(const char* label, bool inner = false)
 {
 	auto& style = ImGui::GetStyle();
 
 	auto width = ImGui::CalcTextSize(label, nullptr, true).x;
-	width += style.FramePadding.x * 2.0f + style.ItemSpacing.x;
+	width += style.FramePadding.x * 2.0f + (inner ? style.ItemInnerSpacing.x : style.ItemSpacing.x);
 	ImGui::SetNextItemWidth(-width);
 }
 
@@ -114,4 +114,9 @@ static void BeginVisibleChildWindow(const char* id, const ImVec2& size, ImGuiChi
 	ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyle().Colors[ImGuiCol_WindowBg]);
 	ImGui::BeginChild(id, size, flags, wndFlags);
 	ImGui::PopStyleColor();
+}
+
+static void SameInnerLine()
+{
+	ImGui::SameLine(0, ImGui::GetStyle().ItemInnerSpacing.x);
 }

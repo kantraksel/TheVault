@@ -3,7 +3,7 @@
 #include "Utils/ImGuiUtils.h"
 #include "Vault/VaultKeeper.h"
 
-AddLockModal::AddLockModal() : BaseModal("New Vault Lock"), isProcessing{false}
+AddLockModal::AddLockModal() : BaseModal("New Vault Lock"), isProcessing{false}, isPasswordShown{false}
 {
 	nameInput.resize(256);
 	pwdInput.resize(256);
@@ -24,15 +24,23 @@ void AddLockModal::OnRender()
 	if (firstFrameDraw)
 		ImGui::SetKeyboardFocusHere();
 	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-	bool submit = ImGui::InputText("##Name", nameInput.data(), nameInput.size() - 1, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoUndoRedo);
+	auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoUndoRedo;
+	if (isProcessing)
+		flags = flags | ImGuiInputTextFlags_ReadOnly;
+	bool submit = ImGui::InputText("##Name", nameInput.data(), nameInput.size() - 1, flags);
 
 	if (!isProcessing)
 	{
 		TextWidget("Value:");
 		ImGui::SameLine();
 
-		constexpr auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
+		flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoUndoRedo;
+		if (!isPasswordShown)
+			flags = flags | ImGuiInputTextFlags_Password;
 		submit = ImGui::InputText("##Password", pwdInput.data(), pwdInput.size() - 1, flags) || submit;
+		SameInnerLine();
+		ImGui::Button("*");
+		isPasswordShown = ImGui::IsItemHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Left);
 		if (ImGui::Button("Add") || submit)
 		{
 			auto name = std::string_view(nameInput.data());
@@ -40,7 +48,6 @@ void AddLockModal::OnRender()
 			if (!name.empty())
 			{
 				int index = VaultKeeper::Get().AddHint(name);
-				memset(nameInput.data(), 0, nameInput.size());
 
 				if (!pwd.empty())
 				{
@@ -52,7 +59,10 @@ void AddLockModal::OnRender()
 					memset(pwdInput.data(), 0, pwdInput.size());
 				}
 				else
+				{
+					memset(nameInput.data(), 0, nameInput.size());
 					Close();
+				}
 			}
 		}
 		ImGui::SameLine();

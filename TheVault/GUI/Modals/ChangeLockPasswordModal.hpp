@@ -13,5 +13,6 @@ protected:
 
 	std::string pwdInput;
 	bool isProcessing;
+	bool isPasswordShown;
 	ChangeNameModal& changeNameModal;
 };

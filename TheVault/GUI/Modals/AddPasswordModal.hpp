@@ -13,4 +13,5 @@ protected:
 
 	std::string nameInput;
 	std::string pwdInput;
+	bool isPasswordShown;
 };

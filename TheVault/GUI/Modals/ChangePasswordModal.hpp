@@ -12,5 +12,6 @@ protected:
 	void OnClose() override;
 
 	std::string pwdInput;
+	bool isPasswordShown;
 	ChangeNameModal& changeNameModal;
 };

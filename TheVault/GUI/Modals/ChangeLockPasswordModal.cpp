@@ -4,7 +4,7 @@
 #include "GUI/VaultCommander.hpp"
 #include "Vault/VaultKeeper.h"
 
-ChangeLockPasswordModal::ChangeLockPasswordModal(ChangeNameModal& changeNameModal) : BaseIndexModal("Change Password##ChangeLockPassword"), isProcessing{false}, changeNameModal(changeNameModal)
+ChangeLockPasswordModal::ChangeLockPasswordModal(ChangeNameModal& changeNameModal) : BaseIndexModal("Change Password##ChangeLockPassword"), isProcessing{false}, isPasswordShown{false}, changeNameModal(changeNameModal)
 {
 	pwdInput.resize(256);
 }
@@ -28,12 +28,17 @@ void ChangeLockPasswordModal::OnRender()
 
 	if (!isProcessing)
 	{
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		SetNextRightButtonAlign("*", true);
 		if (firstFrameDraw)
 			ImGui::SetKeyboardFocusHere();
 
-		constexpr auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_Password | ImGuiInputTextFlags_NoUndoRedo;
+		auto flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_NoUndoRedo;
+		if (!isPasswordShown)
+			flags = flags | ImGuiInputTextFlags_Password;
 		bool submit = ImGui::InputText("##Password", pwdInput.data(), pwdInput.size() - 1, flags);
+		SameInnerLine();
+		ImGui::Button("*");
+		isPasswordShown = ImGui::IsItemHovered() && ImGui::IsMouseDown(ImGuiMouseButton_Left);
 
 		if (ImGui::Button("Change") || submit)
 		{

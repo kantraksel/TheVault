@@ -36,7 +36,8 @@ void LoginApplet::OnRender()
 	CenterNextWindow();
 	if (!ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup))
 		ImGui::SetNextWindowFocus();
-	ImGui::Begin("Enter password matching the hint:##Login", &isWindowOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+	bool* pIsWindowOpen = !isProcessing ? &isWindowOpen : nullptr;
+	ImGui::Begin("Enter password matching the hint:##Login", pIsWindowOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
 	Text(hint);
 
